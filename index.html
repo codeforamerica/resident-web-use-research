@@ -3,6 +3,8 @@
 <head>
 	<meta charset="utf-8" />
 	<title>Untitled</title>
+	<script src="https://code.jquery.com/jquery-1.11.2.min.js" charset="utf-8"></script>
+	<script src="modestmaps.min.js" charset="utf-8"></script>
 	<script src="turf.min.js" charset="utf-8"></script>
 </head>
 <body>
@@ -15,6 +17,76 @@
 	<li><a href="http://api.censusreporter.org/1.0/geo/show/tiger2013?geo_ids=14000US06001401000,14000US06001401400">Pair of selected features</a></li>
 	<li><a href="http://api.censusreporter.org/1.0/data/show/latest?table_ids=B13016&amp;geo_ids=04000US55">Data for one feature</a></li>
 </ul>
+
+<script>
+
+    // Basic GMaps projection
+    var π = Math.PI,
+        zoom = 12,
+        xform = MM.deriveTransformation(-π,  π, 0, 0, π,  π, 1, 0, -π, -π, 0, 1),
+        proj = new MM.MercatorProjection(0, xform),
+        api_base_href = 'http://api.censusreporter.org/1.0/geo';
+    
+    function announce(xhr, settings)
+    {
+        console.log('Getting ' + settings.url);
+    }
+
+    console.log('Yo');
+    
+    var geoid = '16000US0653000', // city of Oakland
+        url = api_base_href+'/tiger2013/'+geoid+'?geom=true';
+    
+    console.log('...');
+    
+    var result = jQuery.ajax(url, {async: false, beforeSend: announce}),
+        display_name = result.responseJSON.properties.display_name,
+        extent = turf.extent(result.responseJSON);
+    
+    console.log(extent);
+    
+    var nw = new MM.Location(extent[3], extent[0]),
+        se = new MM.Location(extent[1], extent[2]),
+        ul = proj.locationCoordinate(nw).zoomTo(zoom).container(),
+        lr = proj.locationCoordinate(se).zoomTo(zoom).container();
+        
+    var tiles = [],
+        tracts = {},
+        count = 0;
+    
+    for(var y = ul.row; y <= lr.row; y += 1)
+    {
+        for(var x = ul.column; x <= lr.column; x += 1)
+        {
+            var tile = zoom+'/'+x+'/'+y;
+            tiles[tile] = api_base_href+'/tiger2013/tiles/140/'+tile+'.geojson';
+        }
+    }
+    
+    for(var tile in tiles)
+    {
+        var url = tiles[tile],
+            result = jQuery.ajax(url, {async: false, beforeSend: announce});
+        
+        console.log('There are ' + result.responseJSON.features.length + ' tracts');
+        
+        for(var i = 0; i < result.responseJSON.features.length; i += 1)
+        {
+            var info = result.responseJSON.features[i].properties;
+            
+            if(tracts[info.geoid] != undefined)
+            {
+                continue;
+            }
+
+            tracts[info.geoid] = info.name;
+            count += 1;
+        }
+    }
+    
+    alert('Loaded ' + count + ' census tracts in and around ' + display_name + ' (' + geoid + ')');
+    
+</script>
 
 </body>
 </html>
