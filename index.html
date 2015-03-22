@@ -4,7 +4,6 @@
 	<meta charset="utf-8" />
 	<title>Untitled</title>
 	<script src="https://code.jquery.com/jquery-1.11.2.min.js" charset="utf-8"></script>
-	<script src="modestmaps.min.js" charset="utf-8"></script>
 	<script src="turf.min.js" charset="utf-8"></script>
 </head>
 <body>
@@ -20,101 +19,27 @@
 
 <script>
 
-    var start = (new Date()).getTime();
-
-    // Basic GMaps projection
-    var π = Math.PI,
-        zoom = 12,
-        xform = MM.deriveTransformation(-π,  π, 0, 0, π,  π, 1, 0, -π, -π, 0, 1),
-        proj = new MM.MercatorProjection(0, xform),
-        api_base_href = 'http://api.censusreporter.org/1.0';
+    var start = (new Date()).getTime(),
+        api_base_href = 'http://api.censusreporter.org/1.0',
+        chunk_size = 5;
     
     function announce(xhr, settings)
     {
         console.log('Getting ' + settings.url);
     }
-
-    console.log('Yo');
     
-    var geoid = '16000US0653000', // city of Oakland
-        url = api_base_href+'/geo/tiger2013/'+geoid+'?geom=true';
+    var muni_geoid = '16000US0653000'; // city of Oakland
     
-    console.log('...');
-    
-    var result = jQuery.ajax(url, {async: false, beforeSend: announce}),
+    var url = api_base_href+'/geo/tiger2013/'+muni_geoid+'?geom=true',
+        result = jQuery.ajax(url, {async: false, beforeSend: announce}),
         display_name = result.responseJSON.properties.display_name,
-        municipality = result.responseJSON,
-        extent = turf.extent(municipality);
+        municipality = result.responseJSON;
     
-    console.log(extent);
+    var url = api_base_href+'/geo/show/tiger2013?geo_ids=140|'+muni_geoid,
+        result = jQuery.ajax(url, {async: false, beforeSend: announce}),
+        tracts = result.responseJSON.features;
     
-    var nw = new MM.Location(extent[3], extent[0]),
-        se = new MM.Location(extent[1], extent[2]),
-        ul = proj.locationCoordinate(nw).zoomTo(zoom).container(),
-        lr = proj.locationCoordinate(se).zoomTo(zoom).container();
-        
-    var tiles = {},
-        tracts = {},
-        seen_tracts = {},
-        count = 0,
-        count_operations = 0,
-        count_tiles = 0;
-    
-    for(var y = ul.row; y <= lr.row; y += 1)
-    {
-        for(var x = ul.column; x <= lr.column; x += 1)
-        {
-            var tile = zoom+'/'+x+'/'+y;
-            tiles[tile] = api_base_href+'/geo/tiger2013/tiles/140/'+tile+'.geojson';
-            count_tiles += 1;
-        }
-    }
-    
-    for(var tile in tiles)
-    {
-        var url = tiles[tile],
-            result = jQuery.ajax(url, {async: false, beforeSend: announce});
-        
-        console.log('There are ' + result.responseJSON.features.length + ' tracts');
-        
-        for(var i = 0; i < result.responseJSON.features.length; i += 1)
-        {
-            var feature = result.responseJSON.features[i],
-                properties = feature.properties;
-            
-            if(seen_tracts[properties.geoid] != undefined)
-            {
-                // already have this one.
-                continue;
-            }
-            
-            seen_tracts[properties.geoid] = true;
-            count_operations += 1;
-
-            var intersection = turf.intersect(feature, municipality);
-            
-            if(intersection == undefined)
-            {
-                // not within the municipality we care about
-                continue;
-            }
-            
-            if(turf.area(intersection) < turf.area(feature) / 20)
-            {
-                // not enough overlap with the municipality we care about
-                console.log(feature.properties.name, 'is someplace else', 'http://censusreporter.org/profiles/'+feature.properties.geoid);
-                continue;
-            }
-
-            tracts[properties.geoid] = feature;
-            count += 1;
-        }
-    }
-    
-    var count_seconds = ((new Date()).getTime() - start) / 1000;
-    alert(count_operations + ' geometry ops over ' + count_tiles + ' tiles in ' + count_seconds + ' seconds');
-    
-    document.write('<p>Loaded ' + count + ' census tracts in and around ' + display_name + ' (' + geoid + ').</p>');
+    document.write('<p>Loaded ' + tracts.length + ' census tracts in and around ' + display_name + ' (' + muni_geoid + ').</p>');
     
     function number(value)
     {
@@ -157,18 +82,30 @@
         return estimate + '% ± ' + error + '%';
     }
     
-    //var tracts = {'14000US06001401000': tracts['14000US06001401000']}; // Longfellow
-    
-    for(var geoid in tracts)
+    for(var i = 0; i <= tracts.length; i += chunk_size)
     {
-        var url = api_base_href+'/data/show/acs2013_5yr?table_ids=B01003,B03002,B19013,B19301&geo_ids='+geoid,
+        var geoids = [],
+            chunk_tracts = {},
+            slice_tracts = tracts.slice(i, i + chunk_size);
+        
+        while(slice_tracts.length)
+        {
+            var tract = slice_tracts.pop();
+
+            geoids.push(tract.properties.geoid);
+            chunk_tracts[tract.properties.geoid] = tract;
+        }
+    
+        var url = api_base_href+'/data/show/acs2013_5yr?table_ids=B01003,B03002,B19013,B19301&geo_ids='+geoids.join(','),
             result = jQuery.ajax(url, {async: false, beforeSend: announce}),
             tables = result.responseJSON.tables,
             data = result.responseJSON.data;
         
         for(var geoid in data)
         {
-            document.write('<h2><a href="http://censusreporter.org/profiles/'+geoid+'">'+tracts[geoid].properties.name+'</a></h2>');
+            var tract = chunk_tracts[geoid];
+            
+            document.write('<h2><a href="http://censusreporter.org/profiles/'+geoid+'">'+tract.properties.name+'</a></h2>');
             document.write('<ul>');
         
             var total_population = data[geoid]['B01003'].estimate['B01003001'],
