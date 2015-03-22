@@ -15,17 +15,19 @@
 	<li><a href="http://api.censusreporter.org/1.0/geo/tiger2013/16000US0653000">JSON for single feature</a></li>
 	<li><a href="http://api.censusreporter.org/1.0/geo/tiger2013/tiles/140/12/656/1582.geojson">Tile of tracts</a></li>
 	<li><a href="http://api.censusreporter.org/1.0/geo/show/tiger2013?geo_ids=14000US06001401000,14000US06001401400">Pair of selected features</a></li>
-	<li><a href="http://api.censusreporter.org/1.0/data/show/latest?table_ids=B13016&amp;geo_ids=04000US55">Data for one feature</a></li>
+	<li><a href="http://api.censusreporter.org/1.0/data/show/acs2013_5yr?table_ids=B13016&amp;geo_ids=04000US55">Data for one feature</a></li>
 </ul>
 
 <script>
+
+    var start = (new Date()).getTime();
 
     // Basic GMaps projection
     var π = Math.PI,
         zoom = 12,
         xform = MM.deriveTransformation(-π,  π, 0, 0, π,  π, 1, 0, -π, -π, 0, 1),
         proj = new MM.MercatorProjection(0, xform),
-        api_base_href = 'http://api.censusreporter.org/1.0/geo';
+        api_base_href = 'http://api.censusreporter.org/1.0';
     
     function announce(xhr, settings)
     {
@@ -35,13 +37,14 @@
     console.log('Yo');
     
     var geoid = '16000US0653000', // city of Oakland
-        url = api_base_href+'/tiger2013/'+geoid+'?geom=true';
+        url = api_base_href+'/geo/tiger2013/'+geoid+'?geom=true';
     
     console.log('...');
     
     var result = jQuery.ajax(url, {async: false, beforeSend: announce}),
         display_name = result.responseJSON.properties.display_name,
-        extent = turf.extent(result.responseJSON);
+        municipality = result.responseJSON,
+        extent = turf.extent(municipality);
     
     console.log(extent);
     
@@ -50,16 +53,20 @@
         ul = proj.locationCoordinate(nw).zoomTo(zoom).container(),
         lr = proj.locationCoordinate(se).zoomTo(zoom).container();
         
-    var tiles = [],
+    var tiles = {},
         tracts = {},
-        count = 0;
+        seen_tracts = {},
+        count = 0,
+        count_operations = 0,
+        count_tiles = 0;
     
     for(var y = ul.row; y <= lr.row; y += 1)
     {
         for(var x = ul.column; x <= lr.column; x += 1)
         {
             var tile = zoom+'/'+x+'/'+y;
-            tiles[tile] = api_base_href+'/tiger2013/tiles/140/'+tile+'.geojson';
+            tiles[tile] = api_base_href+'/geo/tiger2013/tiles/140/'+tile+'.geojson';
+            count_tiles += 1;
         }
     }
     
@@ -72,19 +79,144 @@
         
         for(var i = 0; i < result.responseJSON.features.length; i += 1)
         {
-            var info = result.responseJSON.features[i].properties;
+            var feature = result.responseJSON.features[i],
+                properties = feature.properties;
             
-            if(tracts[info.geoid] != undefined)
+            if(seen_tracts[properties.geoid] != undefined)
             {
+                // already have this one.
+                continue;
+            }
+            
+            seen_tracts[properties.geoid] = true;
+            count_operations += 1;
+
+            var intersection = turf.intersect(feature, municipality);
+            
+            if(intersection == undefined)
+            {
+                // not within the municipality we care about
+                continue;
+            }
+            
+            if(turf.area(intersection) < turf.area(feature) / 20)
+            {
+                // not enough overlap with the municipality we care about
+                console.log(feature.properties.name, 'is someplace else', 'http://censusreporter.org/profiles/'+feature.properties.geoid);
                 continue;
             }
 
-            tracts[info.geoid] = info.name;
+            tracts[properties.geoid] = feature;
             count += 1;
         }
     }
     
-    alert('Loaded ' + count + ' census tracts in and around ' + display_name + ' (' + geoid + ')');
+    var count_seconds = ((new Date()).getTime() - start) / 1000;
+    alert(count_operations + ' geometry ops over ' + count_tiles + ' tiles in ' + count_seconds + ' seconds');
+    
+    document.write('<p>Loaded ' + count + ' census tracts in and around ' + display_name + ' (' + geoid + ').</p>');
+    
+    function number(value)
+    {
+        var string = value.toString();
+        
+        while(string.match(/^\d+\d\d\d\b/))
+        {
+            string = string.replace(/^(\d+)(\d\d\d\b)/, '$1,$2');
+        }
+        
+        return string;
+    }
+    
+    function percent(numerator, denominator, precision)
+    {
+        return parseFloat((100 * numerator / denominator).toPrecision(precision));
+    }
+    
+    function show_population(estimate, error)
+    {
+        if(error == undefined)
+            return number(estimate);
+
+        return number(estimate) + ' ± ' + number(error) + ' (' + percent(error, estimate, 2) + '%)';
+    }
+    
+    function show_income(estimate, error)
+    {
+        if(error == undefined)
+            return '$' + number(estimate);
+
+        return '$' + number(estimate) + ' ± $' + number(error) + ' (' + percent(error, estimate, 2) + '%)';
+    }
+    
+    function show_percentage(estimate, error)
+    {
+        if(error == undefined)
+            return number(estimate) + '%';
+
+        return estimate + '% ± ' + error + '%';
+    }
+    
+    //var tracts = {'14000US06001401000': tracts['14000US06001401000']}; // Longfellow
+    
+    for(var geoid in tracts)
+    {
+        var url = api_base_href+'/data/show/acs2013_5yr?table_ids=B01003,B03002,B19013,B19301&geo_ids='+geoid,
+            result = jQuery.ajax(url, {async: false, beforeSend: announce}),
+            tables = result.responseJSON.tables,
+            data = result.responseJSON.data;
+        
+        for(var geoid in data)
+        {
+            document.write('<h2><a href="http://censusreporter.org/profiles/'+geoid+'">'+tracts[geoid].properties.name+'</a></h2>');
+            document.write('<ul>');
+        
+            var total_population = data[geoid]['B01003'].estimate['B01003001'],
+                total_population_err = data[geoid]['B01003'].error['B01003001'],
+                hispanic_population = data[geoid]['B03002'].estimate['B03002012'],
+                hispanic_population_err = data[geoid]['B03002'].error['B03002012'],
+                hispanic_percent = percent(hispanic_population, total_population, 2),
+                hispanic_percent_err = percent(hispanic_population_err, total_population, 2),
+                white_population = data[geoid]['B03002'].estimate['B03002003'],
+                white_population_err = data[geoid]['B03002'].error['B03002003'],
+                white_percent = percent(white_population, total_population, 2),
+                white_percent_err = percent(white_population_err, total_population, 2),
+                black_population = data[geoid]['B03002'].estimate['B03002004'],
+                black_population_err = data[geoid]['B03002'].error['B03002004'],
+                black_percent = percent(black_population, total_population, 2),
+                black_percent_err = percent(black_population_err, total_population, 2),
+                asian_population = data[geoid]['B03002'].estimate['B03002006'],
+                asian_population_err = data[geoid]['B03002'].error['B03002006'],
+                asian_percent = percent(asian_population, total_population, 2),
+                asian_percent_err = percent(asian_population_err, total_population, 2),
+                other_population = data[geoid]['B03002'].estimate['B03002005'] + data[geoid]['B03002'].estimate['B03002007'] + data[geoid]['B03002'].estimate['B03002008'] + data[geoid]['B03002'].estimate['B03002009'],
+                other_population_err = undefined,
+                other_percent = percent(other_population, total_population, 2),
+                other_percent_err = undefined,
+                medhouse_income = data[geoid]['B19013'].estimate['B19013001'],
+                medhouse_income_err = data[geoid]['B19013'].error['B19013001'],
+                percapita_income = data[geoid]['B19301'].estimate['B19301001'],
+                percapita_income_err = data[geoid]['B19301'].error['B19301001'];
+            
+            document.write('<li>Total population: ' + show_population(total_population, total_population_err) + '</li>');
+            document.write('<li>Hispanic population: ' + show_population(hispanic_population, hispanic_population_err) + '</li>');
+            document.write('<li>White population: ' + show_population(white_population, white_population_err) + '</li>');
+            document.write('<li>Black population: ' + show_population(black_population, black_population_err) + '</li>');
+            document.write('<li>Asian population: ' + show_population(asian_population, asian_population_err) + '</li>');
+            document.write('<li>Other population: ' + show_population(other_population, other_population_err) + '</li>');
+            document.write('<li>Median household income: ' + show_income(medhouse_income, medhouse_income_err) + '</li>');
+            document.write('<li>Per capita income: ' + show_income(percapita_income, percapita_income_err) + '</li>');
+            document.write('<li>Hispanic percent: ' + show_percentage(hispanic_percent, hispanic_percent_err) + '</li>');
+            document.write('<li>White percent: ' + show_percentage(white_percent, white_percent_err) + '</li>');
+            document.write('<li>Black percent: ' + show_percentage(black_percent, black_percent_err) + '</li>');
+            document.write('<li>Asian percent: ' + show_percentage(asian_percent, asian_percent_err) + '</li>');
+            document.write('<li>Other percent: ' + show_percentage(other_percent, other_percent_err) + '</li>');
+
+            document.write('</ul>');
+        }
+        
+        break;
+    }
     
 </script>
 
