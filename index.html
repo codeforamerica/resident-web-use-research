@@ -21,25 +21,24 @@
 
     var start = (new Date()).getTime(),
         api_base_href = 'http://api.censusreporter.org/1.0',
-        chunk_size = 5;
+        chunk_size = 10;
     
     function announce(xhr, settings)
     {
         console.log('Getting ' + settings.url);
     }
     
-    var muni_geoid = '16000US0653000'; // city of Oakland
-    
-    var url = api_base_href+'/geo/tiger2013/'+muni_geoid+'?geom=true',
+    var q = 'Portland',
+        url = api_base_href+'/geo/elasticsearch?size=1&sumlevs=160&q='+escape(q),
         result = jQuery.ajax(url, {async: false, beforeSend: announce}),
-        display_name = result.responseJSON.properties.display_name,
-        municipality = result.responseJSON;
+        muni_geoid = result.responseJSON.results[0].full_geoid,
+        display_name = result.responseJSON.results[0].display_name;
     
     var url = api_base_href+'/geo/show/tiger2013?geo_ids=140|'+muni_geoid,
         result = jQuery.ajax(url, {async: false, beforeSend: announce}),
         tracts = result.responseJSON.features;
     
-    document.write('<p>Loaded ' + tracts.length + ' census tracts in and around ' + display_name + ' (' + muni_geoid + ').</p>');
+    document.write('<p>Loaded ' + tracts.length + ' census tracts in and around <a href="http://censusreporter.org/profiles/' + muni_geoid + '">' + display_name + '</a>.</p>');
     
     function number(value)
     {
@@ -104,6 +103,11 @@
         for(var geoid in data)
         {
             var tract = chunk_tracts[geoid];
+            
+            if(tract.properties['aland'] == 0 || tract.properties['2013_population_estimate'] == 0)
+            {
+                continue;
+            }
             
             document.write('<h2><a href="http://censusreporter.org/profiles/'+geoid+'">'+tract.properties.name+'</a></h2>');
             document.write('<ul>');
