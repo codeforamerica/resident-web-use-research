@@ -95,7 +95,7 @@
             chunk_tracts[tract.properties.geoid] = tract;
         }
     
-        var url = api_base_href+'/data/show/acs2013_5yr?table_ids=B01003,B03002,B19013,B19301&geo_ids='+geoids.join(','),
+        var url = api_base_href+'/data/show/acs2013_5yr?table_ids=B01003,B03002,B19013,B19301,B25003&geo_ids='+geoids.join(','),
             result = jQuery.ajax(url, {async: false, beforeSend: announce}),
             tables = result.responseJSON.tables,
             data = result.responseJSON.data;
@@ -137,7 +137,13 @@
                 medhouse_income = data[geoid]['B19013'].estimate['B19013001'],
                 medhouse_income_err = data[geoid]['B19013'].error['B19013001'],
                 percapita_income = data[geoid]['B19301'].estimate['B19301001'],
-                percapita_income_err = data[geoid]['B19301'].error['B19301001'];
+                percapita_income_err = data[geoid]['B19301'].error['B19301001'],
+                total_housing = data[geoid]['B25003'].estimate['B25003001'],
+                total_housing_err = data[geoid]['B25003'].error['B25003001'],
+                owner_housing = data[geoid]['B25003'].estimate['B25003002'],
+                owner_housing_err = data[geoid]['B25003'].error['B25003002'],
+                owner_percent = percent(owner_housing, total_housing, 2),
+                owner_percent_err = percent(owner_housing_err, total_housing, 2);
             
             document.write('<li>Total population: ' + show_population(total_population, total_population_err) + '</li>');
             document.write('<li>Hispanic population: ' + show_population(hispanic_population, hispanic_population_err) + '</li>');
@@ -152,6 +158,8 @@
             document.write('<li>Black percent: ' + show_percentage(black_percent, black_percent_err) + '</li>');
             document.write('<li>Asian percent: ' + show_percentage(asian_percent, asian_percent_err) + '</li>');
             document.write('<li>Other percent: ' + show_percentage(other_percent, other_percent_err) + '</li>');
+            document.write('<li>Total housing: ' + show_population(total_housing, total_housing_err) + '</li>');
+            document.write('<li>Owner-occupied percent: ' + show_percentage(owner_percent, owner_percent_err) + '</li>');
 
             document.write('</ul>');
         }
