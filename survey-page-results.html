@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>Resident Web Use Results</title>
+	<script src="https://code.jquery.com/jquery-1.11.2.min.js" charset="utf-8"></script>
+	<script src="tabletop.js"></script>
+	<script src="lib.js"></script>
+	<script>
+	
+        function try_placename()
+        {
+            update_status('Loading city tracts…');
+            load_city_tracts(get_query_variable('cityname'), loaded_tracts);
+        }
+
+	    function loaded_tracts(city_geoid, city_name, tracts)
+	    {
+            var onload = function(data, _)
+            {
+                loaded_spreadsheet(city_geoid, city_name, tracts, data);
+            }
+
+            update_status('Found ' + tracts.length + ' tracts in ' + city_name + '. Loading spreadsheet…');
+            load_spreadsheet(get_query_variable('gdoc'), 'Survey Results All', onload);
+	    }
+
+        function loaded_spreadsheet(city_geoid, city_name, tracts, data)
+        {
+            update_status('Found ' + tracts.length + ' tracts in ' + city_name + ' and a spreadsheet with ' + data.length + ' rows.');
+        }
+
+	</script>
+</head>
+<body>
+
+    <p id="status">Hold on…</p>
+
+    <script>
+        try_placename()
+    </script>
+
+</body>
+</html>

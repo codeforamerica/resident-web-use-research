@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>Resident Web Use Results</title>
+	<script src="tabletop.js"></script>
+	<script src="lib.js"></script>
+	<script>
+
+
+        function loaded_spreadsheet(data, _)
+        {
+            var form = document.getElementById('main');
+    
+            form.elements['submit'].disabled = false;
+            form.elements['gdoc'].value = get_query_variable('gdoc');
+
+            update_status('Found spreadsheet with ' + data.length + ' rows.');
+        }
+
+        function try_spreadsheet()
+        {
+            update_status('Loading spreadsheet…');
+            load_spreadsheet(get_query_variable('gdoc'), 'Survey Results All', loaded_spreadsheet);
+        }
+
+	</script>
+</head>
+<body>
+
+    <p id="status">Hold on…</p>
+
+    <form id="main" action="survey-page-results.html" method="get">
+        <input id="gdoc" name="gdoc" type="hidden">
+        <input name="cityname" type="text" size="32" value="Oakland, CA">
+        <input id="submit" type="submit" disabled>
+    </form>
+    
+    <script>
+        try_spreadsheet()
+    </script>
+
+</body>
+</html>
