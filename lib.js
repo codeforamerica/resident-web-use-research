@@ -19,30 +19,33 @@ function get_query_variable(variable)
 
 function load_spreadsheet(gdoc_url, sheet_name, onloaded)
 {
-    console.log('loading', gdoc_url, sheet_name);
-
     Tabletop.init({
         key: gdoc_url, callback: onloaded,
-        simpleSheet: true, wanted: ['Survey Results All']
+        simpleSheet: true, wanted: [sheet_name]
         });
 }
 
 function load_city_tracts(city_name, onloaded_tracts)
 {
-    var api_base_href = 'http://api.censusreporter.org/1.0';
+    var api_base = 'http://api.censusreporter.org/1.0',
+        info = {};
     
-    var url = api_base_href+'/geo/elasticsearch?size=1&sumlevs=160&q='+escape(city_name),
-        result = jQuery.ajax(url, {async: false}),
-        muni_geoid = result.responseJSON.results[0].full_geoid,
-        display_name = result.responseJSON.results[0].display_name;
+    jQuery.ajax(api_base+'/geo/elasticsearch?size=1&sumlevs=160&q='+escape(city_name),
+                {success: onloaded_place});
+    
+    function onloaded_place(json)
+    {
+        info.muni_geoid = json.results[0].full_geoid;
+        info.display_name = json.results[0].display_name;
+
+        jQuery.ajax(api_base+'/geo/show/tiger2013?geo_ids=140|'+escape(info.muni_geoid),
+                    {success: onloaded_geojson});
+    }
 
     function onloaded_geojson(geojson)
     {
-        onloaded_tracts(muni_geoid, display_name, geojson.features);
+        onloaded_tracts(info.muni_geoid, info.display_name, geojson.features);
     }
-
-    var url = api_base_href+'/geo/show/tiger2013?geo_ids=140|'+muni_geoid,
-        result = jQuery.ajax(url, {async: true, success: onloaded_geojson});
 }
 
 function update_status(message)
