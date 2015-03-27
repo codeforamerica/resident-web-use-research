@@ -85,9 +85,9 @@ function load_tract_data(original_tracts, onloaded_all_data)
     var output_tracts = [],
         source_tracts = original_tracts.slice();
     
-    load_data();
+    load_more_data();
     
-    function load_data()
+    function load_more_data()
     {
         if(source_tracts.length == 0)
         {
@@ -115,12 +115,46 @@ function load_tract_data(original_tracts, onloaded_all_data)
     {
         while(request_tracts.length)
         {
-            var tract = request_tracts.shift();
-            tract.data = data[tract.properties.geoid];
+            var tract = {feature: request_tracts.shift(), data: {}},
+                datum = data[tract.feature.properties.geoid];
+
+            tract.data = {
+                // total population
+                'B01003001': { estimate: datum['B01003'].estimate['B01003001'],
+                               error: datum['B01003'].error['B01003001'] },
+                // hispanic population
+                'B03002012': { estimate: datum['B03002'].estimate['B03002012'],
+                               error: datum['B03002'].error['B03002012'] },
+                // white population
+                'B03002003': { estimate: datum['B03002'].estimate['B03002003'],
+                               error: datum['B03002'].error['B03002003'] },
+                // black population
+                'B03002004': { estimate: datum['B03002'].estimate['B03002004'],
+                               error: datum['B03002'].error['B03002004'] },
+                // asian population
+                'B03002006': { estimate: datum['B03002'].estimate['B03002006'],
+                               error: datum['B03002'].error['B03002006'] },
+                // other race population
+                'B0300200x': { estimate: datum['B03002'].estimate['B03002005'] + datum['B03002'].estimate['B03002007'] + datum['B03002'].estimate['B03002008'] + datum['B03002'].estimate['B03002009'],
+                               error: undefined },
+                // median household income
+                'B19013001': { estimate: datum['B19013'].estimate['B19013001'],
+                               error: datum['B19013'].error['B19013001'] },
+                // per-capita income
+                'B19301001': { estimate: datum['B19301'].estimate['B19301001'],
+                               error: datum['B19301'].error['B19301001'] },
+                // total housing
+                'B25003001': { estimate: datum['B25003'].estimate['B25003001'],
+                               error: datum['B25003'].error['B25003001'] },
+                // owner-occupied housing
+                'B25003002': { estimate: datum['B25003'].estimate['B25003002'],
+                               error: datum['B25003'].error['B25003002'] }
+                };
+
             output_tracts.push(tract);
         }
         
-        load_data();
+        load_more_data();
     }
 }
 

@@ -74,9 +74,9 @@
                     var tract = tracts[j],
                         area = areas[i][GEO_COLUMN];
                     
-                    if(turf.intersect(tract, area))
+                    if(turf.intersect(tract.feature, area))
                     {
-                        console.log('Tract ' + tract.properties.name + ' intersects area ' + area.properties.ZCTA5CE10);
+                        console.log('Tract ' + tract.feature.properties.name + ' intersects area ' + area.properties.ZCTA5CE10);
                     }
                 }
             }
