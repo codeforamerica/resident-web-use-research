@@ -17,6 +17,17 @@
 
 	    function loaded_tracts(city_geoid, city_name, tracts)
 	    {
+            function onload(tracts)
+            {
+                loaded_data(city_geoid, city_name, tracts);
+            }
+
+            update_status('Found ' + tracts.length + ' tracts. Loading data…');
+            load_tract_data(tracts, onload);
+	    }
+	    
+	    function loaded_data(city_geoid, city_name, tracts)
+	    {
             function onload(data)
             {
                 loaded_spreadsheet(city_geoid, city_name, tracts, data);
@@ -27,7 +38,7 @@
                 alert('Failed to load spreadsheet: ' + reason);
             }
 
-            update_status('Found ' + tracts.length + ' tracts in ' + city_name + '. Loading spreadsheet…');
+            update_status('Loaded data for ' + tracts.length + ' tracts in ' + city_name + '. Loading spreadsheet…');
             load_spreadsheet(get_query_variable('gdoc'), 'Survey Results All', onload, onerror);
 	    }
 
