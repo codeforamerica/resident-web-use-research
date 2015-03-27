@@ -4,6 +4,16 @@
 	<meta charset="utf-8" />
 	<title>Resident Web Use Results</title>
     <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+    <style type="text/css">
+        .container {
+            display: flex;
+            height: 900px;
+        }
+        .container div {
+            flex: 1;
+        }
+    </style>
+
     <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
     <script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.3.0"></script>
     <script src="https://code.jquery.com/jquery-1.11.2.min.js" charset="utf-8"></script>
@@ -145,7 +155,15 @@
             });
             var tile_layer = new L.StamenTileLayer('toner-lite');
             map.addLayer(tile_layer);
-            L.geoJson(geojson).addTo(map);
+            var style = {
+                "color": "black",
+                "weight": 1,
+                "fillColor": "#0A6739",
+                "opacity": 1,
+                "clickable": false
+            };
+
+            L.geoJson(geojson, { style: style }).addTo(map);
         }
 
 	</script>
@@ -176,12 +194,16 @@
         <li><span id="friend-computer">—</span> Friend’s computer</li>
     </ul>
 
-    <div id='map' style='height: 900px;'></div>
+    <div class='container'>
+        <div id='survey-map' ></div>
+        <div id='recommendation-map'></div>
+    </div>
 
     <script>
         //try_placename()
         $.getJSON('tracts.geojson', function(data) {
-            load_map('map', 37.7707, -122.3781, data);
+            load_map('survey-map', 37.7707, -122.3781, data);
+            load_map('recommendation-map', 37.7707, -122.3781, data);
         });
     </script>
 </body>
