@@ -4,6 +4,16 @@
 	<meta charset="utf-8" />
 	<title>Resident Web Use Results</title>
     <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+    <style type="text/css">
+        .container {
+            display: flex;
+            height: 900px;
+        }
+        .container div {
+            flex: 1;
+        }
+    </style>
+
     <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
     <script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.3.0"></script>
     <script src="https://code.jquery.com/jquery-1.11.2.min.js" charset="utf-8"></script>
@@ -66,14 +76,41 @@
             correlate_geographies(responses, tracts, oncorrelate);
         }
 
-        function load_map(map_id, latitude, longitude, geojson) {
+        function load_map(map_id, latitude, longitude, geojson, colors) {
             var map = new L.Map(map_id, {
                 center: new L.LatLng(latitude, longitude),
                 zoom: 12
             });
             var tile_layer = new L.StamenTileLayer('toner-lite');
             map.addLayer(tile_layer);
-            L.geoJson(geojson).addTo(map);
+
+            var responses_array =  geojson.features.map(function(tract){ return tract.responses; });
+            var max_responses = Math.max.apply(null, responses_array);
+
+            function getColor(d) {
+                var density = d / max_responses;
+                return density > 0.875   ? colors[7] :
+                       density > 0.75    ? colors[6] :
+                       density > 0.625   ? colors[5] :
+                       density > 0.5     ? colors[4] :
+                       density > 0.375   ? colors[3] :
+                       density > 0.25    ? colors[2] :
+                       density > 0.125   ? colors[1] :
+                                         colors[0];
+            };
+
+            function style(feature) {
+                return {
+                    fillColor: getColor(feature.responses),
+                    weight: 1,
+                    opacity: 1,
+                    color: 'black',
+                    dashArray: '3',
+                    fillOpacity: 0.7
+                };
+            };
+
+            L.geoJson(geojson, { style: style }).addTo(map);
         }
 
 	</script>
@@ -82,12 +119,22 @@
 
     <p id="status">Hold on…</p>
 
-    <div id='map' style='height: 900px;'></div>
+    <div class='container'>
+        <div id='survey-map' ></div>
+        <div id='recommendation-map'></div>
+    </div>
 
     <script>
+        var response_colors = ['#ffffe5', '#f7fcb9', '#d9f0a3', '#addd8e', '#78c679', '#41ab5d', '#238443', '#006837'];
+        var recommendation_colors = ['#f7fbff', '#deebf7', '#c6dbef', '#9ecae1', '#6baed6', '#4292c6', '#2171b5', '#08519c'];
         //try_placename()
         $.getJSON('tracts.geojson', function(data) {
-            load_map('map', 37.7707, -122.3781, data);
+            for(var i=0; i < data.features.length; i++){
+                data.features[i].responses = Math.floor(Math.random()*100);
+            }
+
+            load_map('survey-map', 37.7707, -122.3781, data, response_colors);
+            load_map('recommendation-map', 37.7707, -122.3781, data, recommendation_colors);
         });
     </script>
 </body>
