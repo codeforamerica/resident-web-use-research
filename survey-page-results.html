@@ -3,7 +3,10 @@
 <head>
 	<meta charset="utf-8" />
 	<title>Resident Web Use Results</title>
-	<script src="https://code.jquery.com/jquery-1.11.2.min.js" charset="utf-8"></script>
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+    <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+    <script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.3.0"></script>
+    <script src="https://code.jquery.com/jquery-1.11.2.min.js" charset="utf-8"></script>
 	<script src="turf.min.js"></script>
 	<script src="regression.js"></script>
 	<script src="tabletop.js"></script>
@@ -135,6 +138,16 @@
             update_status('Found ' + tracts.length + ' tracts in ' + stuff.city.name + ' and a spreadsheet with ' + stuff.responses.length + ' responses.');
         }
 
+        function load_map(map_id, latitude, longitude, geojson) {
+            var map = new L.Map(map_id, {
+                center: new L.LatLng(latitude, longitude),
+                zoom: 12
+            });
+            var tile_layer = new L.StamenTileLayer('toner-lite');
+            map.addLayer(tile_layer);
+            L.geoJson(geojson).addTo(map);
+        }
+
 	</script>
 </head>
 <body>
@@ -163,9 +176,13 @@
         <li><span id="friend-computer">—</span> Friend’s computer</li>
     </ul>
 
-    <script>
-        try_placename()
-    </script>
+    <div id='map' style='height: 900px;'></div>
 
+    <script>
+        //try_placename()
+        $.getJSON('tracts.geojson', function(data) {
+            load_map('map', 37.7707, -122.3781, data);
+        });
+    </script>
 </body>
 </html>
