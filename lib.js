@@ -3,6 +3,20 @@ var GEO_COLUMN = 'Geographic Area',
     CR_API_PAGE = 25;
 
 /**
+ * Container class for census tract objects.
+ *
+ * feature is a GeoJSON feature.
+ * geoid is the Census GEOID.
+ * data is unitialized and later holds a Census data dictionary.
+ */
+function Tract(geoid, feature)
+{
+    this.geoid = feature.properties.geoid;
+    this.feature = feature;
+    this.data = undefined;
+}
+
+/**
  * Borrowed from http://stackoverflow.com/questions/2090551/parse-query-string-in-javascript.
  */
 function get_query_variable(variable)
@@ -21,6 +35,12 @@ function get_query_variable(variable)
     console.log('Query variable %s not found', variable);
 }
 
+/**
+ * Load spreadsheet data with Tabletop, call one of two callback functions.
+ *
+ * onsuccess called with list of row objects.
+ * onerror called with error message and Tabletop instance.
+ */
 function load_spreadsheet(gdoc_url, sheet_name, onsuccess, onerror)
 {
     Tabletop.init({
@@ -58,6 +78,11 @@ function load_spreadsheet(gdoc_url, sheet_name, onsuccess, onerror)
     }
 }
 
+/**
+ * Load city census tracts from Census Reporter, pass to callback function.
+ *
+ * onloaded_tracts called with city GEOID, name, and list of tract objects.
+ */
 function load_city_tracts(city_name, onloaded_tracts)
 {
     var info = {};
@@ -76,10 +101,24 @@ function load_city_tracts(city_name, onloaded_tracts)
 
     function onloaded_geojson(geojson)
     {
-        onloaded_tracts(info.muni_geoid, info.display_name, geojson.features);
+        var feature,
+            tracts = [];
+        
+        while(geojson.features.length)
+        {
+            feature = geojson.features.shift();
+            tracts.push(new Tract(feature.properties.geoid, feature));
+        }
+        
+        onloaded_tracts(info.muni_geoid, info.display_name, tracts);
     }
 }
 
+/**
+ * Load city census data tables from Census Reporter, pass to callback function.
+ *
+ * onloaded_all_data called with list of tract objects.
+ */
 function load_tract_data(original_tracts, onloaded_all_data)
 {
     var output_tracts = [],
@@ -101,8 +140,8 @@ function load_tract_data(original_tracts, onloaded_all_data)
         while(geoids.length < CR_API_PAGE && source_tracts.length)
         {
             var tract = source_tracts.shift();
-            geoids.push(tract.properties.geoid);
             request_tracts.push(tract);
+            geoids.push(tract.geoid);
         }
         
         console.log(source_tracts.length, request_tracts.length, output_tracts.length);
@@ -115,8 +154,8 @@ function load_tract_data(original_tracts, onloaded_all_data)
     {
         while(request_tracts.length)
         {
-            var tract = {feature: request_tracts.shift(), data: {}},
-                datum = data[tract.feature.properties.geoid];
+            var tract = request_tracts.shift(),
+                datum = data[tract.geoid];
 
             tract.data = {
                 // total population
