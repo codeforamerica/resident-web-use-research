@@ -4,6 +4,7 @@
 	<meta charset="utf-8" />
 	<title>Resident Web Use Results</title>
 	<script src="https://code.jquery.com/jquery-1.11.2.min.js" charset="utf-8"></script>
+	<script src="turf.min.js"></script>
 	<script src="tabletop.js"></script>
 	<script src="lib.js"></script>
 	<script>
@@ -44,8 +45,30 @@
                 }
             }
             
-            console.log('Areas:', areas);
+            setTimeout(function() { correlate_geographies(areas, tracts) }, 10);
+        }
+        
+        function correlate_geographies(areas, tracts)
+        {
+            console.log('Areas:', areas.length);
             console.log('One area:', areas[0][GEO_COLUMN]);
+            
+            console.log('Tracts:', tracts.length);
+            console.log('One tract:', tracts[0]);
+            
+            for(var i = 0; i < areas.length; i++)
+            {
+                for(var j = 0; j < tracts.length; j++)
+                {
+                    var tract = tracts[j],
+                        area = areas[i][GEO_COLUMN];
+                    
+                    if(turf.intersect(tract, area))
+                    {
+                        console.log('Tract ' + tract.properties.name + ' intersects area ' + area.properties.ZCTA5CE10);
+                    }
+                }
+            }
         }
 
 	</script>
