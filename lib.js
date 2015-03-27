@@ -1,3 +1,5 @@
+var GEO_COLUMN = 'Geographic Area';
+
 /**
  * Borrowed from http://stackoverflow.com/questions/2090551/parse-query-string-in-javascript.
  */
@@ -17,12 +19,41 @@ function get_query_variable(variable)
     console.log('Query variable %s not found', variable);
 }
 
-function load_spreadsheet(gdoc_url, sheet_name, onloaded)
+function load_spreadsheet(gdoc_url, sheet_name, onsuccess, onerror)
 {
     Tabletop.init({
-        key: gdoc_url, callback: onloaded,
+        key: gdoc_url, callback: callback,
         simpleSheet: true, wanted: [sheet_name]
         });
+    
+    function callback(data, ttop)
+    {
+        try {
+            if(data.length == 0) {
+                return onerror('Zero rows returned', ttop);
+            }
+        
+            if(data[0][GEO_COLUMN] == undefined) {
+                return onerror('Missing "Geographic Area" column', ttop);
+            }
+            
+            for(var i = 0; i <= data.length; i++) {
+                if(data[i]) {
+                    try {
+                        data[i][GEO_COLUMN] = JSON.parse(data[i][GEO_COLUMN]);
+
+                    } catch(error) {
+                        data[i][GEO_COLUMN] = null;
+                    }
+                }
+            }
+
+        } catch(error) {
+            return onerror('Caught error: ' + error.message);
+        }
+    
+        onsuccess(data);
+    }
 }
 
 function load_city_tracts(city_name, onloaded_tracts)

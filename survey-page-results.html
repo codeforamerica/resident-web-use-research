@@ -16,18 +16,36 @@
 
 	    function loaded_tracts(city_geoid, city_name, tracts)
 	    {
-            var onload = function(data, _)
+            function onload(data)
             {
                 loaded_spreadsheet(city_geoid, city_name, tracts, data);
             }
 
+            function onerror(reason, ttop)
+            {
+                alert('Failed to load spreadsheet: ' + reason);
+            }
+
             update_status('Found ' + tracts.length + ' tracts in ' + city_name + '. Loading spreadsheet…');
-            load_spreadsheet(get_query_variable('gdoc'), 'Survey Results All', onload);
+            load_spreadsheet(get_query_variable('gdoc'), 'Survey Results All', onload, onerror);
 	    }
 
         function loaded_spreadsheet(city_geoid, city_name, tracts, data)
         {
             update_status('Found ' + tracts.length + ' tracts in ' + city_name + ' and a spreadsheet with ' + data.length + ' rows.');
+            
+            var areas = [];
+            
+            for(var i = 0; i < data.length; i++)
+            {
+                if(data[i][GEO_COLUMN])
+                {
+                    areas.push(data[i]);
+                }
+            }
+            
+            console.log('Areas:', areas);
+            console.log('One area:', areas[0][GEO_COLUMN]);
         }
 
 	</script>

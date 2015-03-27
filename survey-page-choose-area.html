@@ -8,7 +8,7 @@
 	<script>
 
 
-        function loaded_spreadsheet(data, _)
+        function loaded_spreadsheet(data)
         {
             var form = document.getElementById('main');
     
@@ -17,11 +17,17 @@
 
             update_status('Found spreadsheet with ' + data.length + ' rows.');
         }
+        
+        function failed_spreadsheet(reason, ttop)
+        {
+            alert('Failed to load spreadsheet: ' + reason);
+        }
 
         function try_spreadsheet()
         {
             update_status('Loading spreadsheet…');
-            load_spreadsheet(get_query_variable('gdoc'), 'Survey Results All', loaded_spreadsheet);
+            load_spreadsheet(get_query_variable('gdoc'), 'Survey Results All',
+                             loaded_spreadsheet, failed_spreadsheet);
         }
 
 	</script>
