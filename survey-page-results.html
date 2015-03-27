@@ -69,17 +69,52 @@
             
             for(var i = 0; i < areas.length; i++)
             {
+                var area = areas[i][GEO_COLUMN],
+                    // Overall population estimated to lie within this area.
+                    population_estimate = 0,
+                    // Tract-by-tract shares of overall population.
+                    intersection_pops = {};
+                
                 for(var j = 0; j < tracts.length; j++)
                 {
                     var tract = tracts[j],
-                        area = areas[i][GEO_COLUMN];
+                        intersection = turf.intersect(tract.feature, area);
                     
-                    if(turf.intersect(tract.feature, area))
+                    if(intersection)
                     {
-                        console.log('Tract ' + tract.feature.properties.name + ' intersects area ' + area.properties.ZCTA5CE10);
+                        var tract_share = turf.area(intersection) / turf.area(tract.feature),
+                            intersection_pop = tract_share * tract.data['B01003001'].estimate;
+                        
+                        population_estimate += intersection_pop;
+                        intersection_pops[tract.geoid] = intersection_pop;
+                    
+                        //console.log('Tract ' + tract.feature.properties.name + ' intersects area ' + area.properties.ZCTA5CE10 + ' by ' + Math.round(share * 100) + '%');
+                    }
+                }
+            
+                console.log('Area', area.properties.ZCTA5CE10, '-- est.', population_estimate, 'people');
+                
+                for(var j = 0; j < tracts.length; j++)
+                {
+                    var tract = tracts[j],
+                        share = intersection_pops[tract.geoid] / population_estimate;
+                    
+                    if(share)
+                    {
+                        tract.responses += share;
                     }
                 }
             }
+            
+            var total = 0;
+            
+            for(var i = 0; i < tracts.length; i++)
+            {
+                console.log('Tract', tracts[i].geoid, '-- est.', tracts[i].responses, 'responses');
+                total += tracts[i].responses;
+            }
+            
+            console.log('Total', total);
         }
 
 	</script>
