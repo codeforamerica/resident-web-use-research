@@ -18,6 +18,18 @@ function Tract(geoid, feature)
 }
 
 /**
+ * Container class for survey response objects.
+ *
+ * fields is a dictionary of response fields.
+ * feature is a GeoJSON feature.
+ */
+function Response(fields, feature)
+{
+    this.fields = fields;
+    this.feature = feature;
+}
+
+/**
  * Borrowed from http://stackoverflow.com/questions/2090551/parse-query-string-in-javascript.
  */
 function get_query_variable(variable)
@@ -39,7 +51,7 @@ function get_query_variable(variable)
 /**
  * Load spreadsheet data with Tabletop, call one of two callback functions.
  *
- * onsuccess called with list of row objects.
+ * onsuccess called with list of Response objects.
  * onerror called with error message and Tabletop instance.
  */
 function load_spreadsheet(gdoc_url, sheet_name, onsuccess, onerror)
@@ -51,6 +63,8 @@ function load_spreadsheet(gdoc_url, sheet_name, onsuccess, onerror)
     
     function callback(data, ttop)
     {
+        var responses = [];
+    
         try {
             if(data.length == 0) {
                 return onerror('Zero rows returned', ttop);
@@ -62,12 +76,18 @@ function load_spreadsheet(gdoc_url, sheet_name, onsuccess, onerror)
             
             for(var i = 0; i <= data.length; i++) {
                 if(data[i]) {
+                    var fields = data[i],
+                        feature;
+                
                     try {
-                        data[i][GEO_COLUMN] = JSON.parse(data[i][GEO_COLUMN]);
+                        feature = JSON.parse(fields[GEO_COLUMN]);
+                        delete fields[GEO_COLUMN];
 
                     } catch(error) {
-                        data[i][GEO_COLUMN] = null;
+                        feature = null;
                     }
+                    
+                    responses.push(new Response(fields, feature));
                 }
             }
 
@@ -75,14 +95,14 @@ function load_spreadsheet(gdoc_url, sheet_name, onsuccess, onerror)
             return onerror('Caught error: ' + error.message);
         }
     
-        onsuccess(data);
+        onsuccess(responses);
     }
 }
 
 /**
  * Load city census tracts from Census Reporter, pass to callback function.
  *
- * onloaded_tracts called with city GEOID, name, and list of tract objects.
+ * onloaded_tracts called with city GEOID, name, and list of Tract objects.
  */
 function load_city_tracts(city_name, onloaded_tracts)
 {
@@ -118,7 +138,7 @@ function load_city_tracts(city_name, onloaded_tracts)
 /**
  * Load city census data tables from Census Reporter, pass to callback function.
  *
- * onloaded_all_data called with list of tract objects.
+ * onloaded_all_data called with list of Tract objects.
  */
 function load_tract_data(original_tracts, onloaded_all_data)
 {
@@ -207,14 +227,14 @@ function load_tract_data(original_tracts, onloaded_all_data)
 function correlate_geographies(responses, tracts)
 {
     console.log('Responses:', responses.length);
-    console.log('One response:', responses[0][GEO_COLUMN]);
+    console.log('One response:', responses[0]);
     
     console.log('Tracts:', tracts.length);
     console.log('One tract:', tracts[0]);
     
     for(var i = 0; i < responses.length; i++)
     {
-        var response_feature = responses[i][GEO_COLUMN],
+        var response = responses[i],
             // Overall population estimated to lie within this response.
             population_estimate = 0,
             // Tract-by-tract shares of overall population.
@@ -223,7 +243,7 @@ function correlate_geographies(responses, tracts)
         for(var j = 0; j < tracts.length; j++)
         {
             var tract = tracts[j],
-                intersection = turf.intersect(tract.feature, response_feature);
+                intersection = turf.intersect(tract.feature, response.feature);
             
             if(intersection)
             {
@@ -233,11 +253,11 @@ function correlate_geographies(responses, tracts)
                 population_estimate += intersection_pop;
                 intersection_pops[tract.geoid] = intersection_pop;
             
-                //console.log('Tract ' + tract.feature.properties.name + ' intersects area ' + response_feature.properties.ZCTA5CE10 + ' by ' + Math.round(share * 100) + '%');
+                //console.log('Tract ' + tract.feature.properties.name + ' intersects area ' + response.feature.properties.ZCTA5CE10 + ' by ' + Math.round(share * 100) + '%');
             }
         }
     
-        console.log('Response', response_feature.properties.ZCTA5CE10, '-- est.', population_estimate.toFixed(0), 'people');
+        console.log('Response', response.feature.properties.ZCTA5CE10, '-- est.', population_estimate.toFixed(0), 'people');
         
         for(var j = 0; j < tracts.length; j++)
         {

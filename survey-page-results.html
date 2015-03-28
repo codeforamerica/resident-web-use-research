@@ -28,9 +28,9 @@
 	    
 	    function loaded_data(city_geoid, city_name, tracts)
 	    {
-            function onload(data)
+            function onload(responses)
             {
-                loaded_spreadsheet(city_geoid, city_name, tracts, data);
+                loaded_spreadsheet(city_geoid, city_name, tracts, responses);
             }
 
             function onerror(reason, ttop)
@@ -42,21 +42,21 @@
             load_spreadsheet(get_query_variable('gdoc'), 'Survey Results All', onload, onerror);
 	    }
 
-        function loaded_spreadsheet(city_geoid, city_name, tracts, data)
+        function loaded_spreadsheet(city_geoid, city_name, tracts, all_responses)
         {
-            update_status('Found ' + tracts.length + ' tracts in ' + city_name + ' and a spreadsheet with ' + data.length + ' rows.');
+            update_status('Found ' + tracts.length + ' tracts in ' + city_name + ' and a spreadsheet with ' + all_responses.length + ' responses.');
             
-            var areas = [];
+            var responses = [];
             
-            for(var i = 0; i < data.length; i++)
+            for(var i = 0; i < all_responses.length; i++)
             {
-                if(data[i][GEO_COLUMN])
+                if(all_responses[i].feature)
                 {
-                    areas.push(data[i]);
+                    responses.push(all_responses[i]);
                 }
             }
             
-            setTimeout(function() { correlate_geographies(areas, tracts) }, 10);
+            setTimeout(function() { correlate_geographies(responses, tracts) }, 10);
         }
 
 	</script>
