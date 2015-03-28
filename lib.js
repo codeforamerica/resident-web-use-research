@@ -198,6 +198,70 @@ function load_tract_data(original_tracts, onloaded_all_data)
     }
 }
 
+/**
+ * Correlate geographic overage of neighborhoods with Census tracts.
+ *
+ * responses is a list of response GeoJSON features.
+ * tracts is a list of Tract objects.
+ */
+function correlate_geographies(responses, tracts)
+{
+    console.log('Responses:', responses.length);
+    console.log('One response:', responses[0][GEO_COLUMN]);
+    
+    console.log('Tracts:', tracts.length);
+    console.log('One tract:', tracts[0]);
+    
+    for(var i = 0; i < responses.length; i++)
+    {
+        var response_feature = responses[i][GEO_COLUMN],
+            // Overall population estimated to lie within this response.
+            population_estimate = 0,
+            // Tract-by-tract shares of overall population.
+            intersection_pops = {};
+        
+        for(var j = 0; j < tracts.length; j++)
+        {
+            var tract = tracts[j],
+                intersection = turf.intersect(tract.feature, response_feature);
+            
+            if(intersection)
+            {
+                var tract_share = turf.area(intersection) / turf.area(tract.feature),
+                    intersection_pop = tract_share * tract.data['B01003001'].estimate;
+                
+                population_estimate += intersection_pop;
+                intersection_pops[tract.geoid] = intersection_pop;
+            
+                //console.log('Tract ' + tract.feature.properties.name + ' intersects area ' + response_feature.properties.ZCTA5CE10 + ' by ' + Math.round(share * 100) + '%');
+            }
+        }
+    
+        console.log('Response', response_feature.properties.ZCTA5CE10, '-- est.', population_estimate.toFixed(0), 'people');
+        
+        for(var j = 0; j < tracts.length; j++)
+        {
+            var tract = tracts[j],
+                share = intersection_pops[tract.geoid] / population_estimate;
+            
+            if(share)
+            {
+                tract.responses += share;
+            }
+        }
+    }
+    
+    var total = 0;
+    
+    for(var i = 0; i < tracts.length; i++)
+    {
+        console.log('Tract', tracts[i].geoid, '-- est.', tracts[i].responses.toFixed(3), 'responses');
+        total += tracts[i].responses;
+    }
+    
+    console.log('Total', total.toFixed(3));
+}
+
 function update_status(message)
 {
     document.getElementById('status').innerText = message;
