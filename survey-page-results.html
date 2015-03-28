@@ -4,6 +4,7 @@
 	<meta charset="utf-8" />
 	<title>Resident Web Use Results</title>
 	<script src="https://code.jquery.com/jquery-1.11.2.min.js" charset="utf-8"></script>
+	<script src="turf.min.js"></script>
 	<script src="tabletop.js"></script>
 	<script src="lib.js"></script>
 	<script>
@@ -16,9 +17,20 @@
 
 	    function loaded_tracts(city_geoid, city_name, tracts)
 	    {
-            function onload(data)
+            function onload(tracts)
             {
-                loaded_spreadsheet(city_geoid, city_name, tracts, data);
+                loaded_data(city_geoid, city_name, tracts);
+            }
+
+            update_status('Found ' + tracts.length + ' tracts. Loading data…');
+            load_tract_data(tracts, onload);
+	    }
+	    
+	    function loaded_data(city_geoid, city_name, tracts)
+	    {
+            function onload(responses)
+            {
+                loaded_spreadsheet(city_geoid, city_name, tracts, responses);
             }
 
             function onerror(reason, ttop)
@@ -26,26 +38,30 @@
                 alert('Failed to load spreadsheet: ' + reason);
             }
 
-            update_status('Found ' + tracts.length + ' tracts in ' + city_name + '. Loading spreadsheet…');
+            update_status('Loaded data for ' + tracts.length + ' tracts in ' + city_name + '. Loading spreadsheet…');
             load_spreadsheet(get_query_variable('gdoc'), 'Survey Results All', onload, onerror);
 	    }
 
-        function loaded_spreadsheet(city_geoid, city_name, tracts, data)
+        function loaded_spreadsheet(city_geoid, city_name, tracts, all_responses)
         {
-            update_status('Found ' + tracts.length + ' tracts in ' + city_name + ' and a spreadsheet with ' + data.length + ' rows.');
-            
-            var areas = [];
-            
-            for(var i = 0; i < data.length; i++)
+            function oncorrelate(tracts)
             {
-                if(data[i][GEO_COLUMN])
+                update_status('Found ' + tracts.length + ' tracts in ' + city_name + ' and a spreadsheet with ' + responses.length + ' geographic responses.');
+            }
+        
+            update_status('Found ' + tracts.length + ' tracts in ' + city_name + ' and a spreadsheet with ' + all_responses.length + ' responses.');
+            
+            var responses = [];
+            
+            for(var i = 0; i < all_responses.length; i++)
+            {
+                if(all_responses[i].feature)
                 {
-                    areas.push(data[i]);
+                    responses.push(all_responses[i]);
                 }
             }
             
-            console.log('Areas:', areas);
-            console.log('One area:', areas[0][GEO_COLUMN]);
+            correlate_geographies(responses, tracts, oncorrelate);
         }
 
 	</script>

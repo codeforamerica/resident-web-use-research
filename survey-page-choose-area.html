@@ -8,14 +8,14 @@
 	<script>
 
 
-        function loaded_spreadsheet(data)
+        function loaded_spreadsheet(responses)
         {
             var form = document.getElementById('main');
     
             form.elements['submit'].disabled = false;
             form.elements['gdoc'].value = get_query_variable('gdoc');
 
-            update_status('Found spreadsheet with ' + data.length + ' rows.');
+            update_status('Found spreadsheet with ' + responses.length + ' responses.');
         }
         
         function failed_spreadsheet(reason, ttop)
