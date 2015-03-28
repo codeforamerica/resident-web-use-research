@@ -222,9 +222,11 @@ function load_tract_data(original_tracts, onloaded_all_data)
  * Correlate geographic overage of neighborhoods with Census tracts.
  *
  * responses is a list of response GeoJSON features.
- * tracts is a list of Tract objects.
+ * tracts is a list of Tract objects, each modified by reference.
+ *
+ * oncorrelated called with list of Tract objects.
  */
-function correlate_geographies(responses, tracts)
+function correlate_geographies(responses, tracts, oncorrelated)
 {
     console.log('Responses:', responses.length);
     console.log('One response:', responses[0]);
@@ -280,6 +282,8 @@ function correlate_geographies(responses, tracts)
     }
     
     console.log('Total', total.toFixed(3));
+    
+    oncorrelated(tracts);
 }
 
 function update_status(message)

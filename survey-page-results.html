@@ -44,6 +44,11 @@
 
         function loaded_spreadsheet(city_geoid, city_name, tracts, all_responses)
         {
+            function oncorrelate(tracts)
+            {
+                update_status('Found ' + tracts.length + ' tracts in ' + city_name + ' and a spreadsheet with ' + responses.length + ' geographic responses.');
+            }
+        
             update_status('Found ' + tracts.length + ' tracts in ' + city_name + ' and a spreadsheet with ' + all_responses.length + ' responses.');
             
             var responses = [];
@@ -56,7 +61,7 @@
                 }
             }
             
-            setTimeout(function() { correlate_geographies(responses, tracts) }, 10);
+            correlate_geographies(responses, tracts, oncorrelate);
         }
 
 	</script>
