@@ -9,6 +9,8 @@
 	<script src="lib.js"></script>
 	<script>
 	
+        var stuff = {responses: null, tracts: null, city: {name: null, geoid: null}};
+	
         function try_placename()
         {
             update_status('Loading city tracts…');
@@ -17,51 +19,49 @@
 
 	    function loaded_tracts(city_geoid, city_name, tracts)
 	    {
-            function onload(tracts)
-            {
-                loaded_data(city_geoid, city_name, tracts);
-            }
-
+	        stuff.city.geoid = city_geoid;
+	        stuff.city.name = city_name;
+	    
             update_status('Found ' + tracts.length + ' tracts. Loading data…');
-            load_tract_data(tracts, onload);
+            load_tract_data(tracts, loaded_tract_data);
 	    }
 	    
-	    function loaded_data(city_geoid, city_name, tracts)
+	    function loaded_tract_data(tracts)
 	    {
-            function onload(responses)
-            {
-                loaded_spreadsheet(city_geoid, city_name, tracts, responses);
-            }
-
+	        stuff.tracts = tracts;
+	    
             function onerror(reason, ttop)
             {
                 alert('Failed to load spreadsheet: ' + reason);
             }
 
-            update_status('Loaded data for ' + tracts.length + ' tracts in ' + city_name + '. Loading spreadsheet…');
-            load_spreadsheet(get_query_variable('gdoc'), 'Survey Results All', onload, onerror);
+            update_status('Loaded data for ' + tracts.length + ' tracts in ' + stuff.city.name + '. Loading spreadsheet…');
+            load_spreadsheet(get_query_variable('gdoc'), 'Survey Results All', loaded_spreadsheet, onerror);
 	    }
 
-        function loaded_spreadsheet(city_geoid, city_name, tracts, all_responses)
+        function loaded_spreadsheet(all_responses)
         {
-            function oncorrelate(tracts)
-            {
-                update_status('Found ' + tracts.length + ' tracts in ' + city_name + ' and a spreadsheet with ' + responses.length + ' geographic responses.');
-            }
-        
-            update_status('Found ' + tracts.length + ' tracts in ' + city_name + ' and a spreadsheet with ' + all_responses.length + ' responses.');
+            stuff.responses = all_responses;
             
-            var responses = [];
+            var geo_responses = [];
             
             for(var i = 0; i < all_responses.length; i++)
             {
                 if(all_responses[i].feature)
                 {
-                    responses.push(all_responses[i]);
+                    geo_responses.push(all_responses[i]);
                 }
             }
-            
-            correlate_geographies(responses, tracts, oncorrelate);
+        
+            update_status('Found ' + stuff.tracts.length + ' tracts in ' + stuff.city.name + ' and a spreadsheet with ' + geo_responses.length + ' geographic responses.');
+            correlate_geographies(geo_responses, stuff.tracts, correlated_spreadsheet);
+        }
+        
+        function correlated_spreadsheet(tracts)
+        {
+	        stuff.tracts = tracts;
+
+            update_status('Found ' + tracts.length + ' tracts in ' + stuff.city.name + ' and a spreadsheet with ' + stuff.responses.length + ' responses.');
         }
 
 	</script>
