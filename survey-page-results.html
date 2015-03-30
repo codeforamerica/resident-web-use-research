@@ -9,6 +9,8 @@
 	<script src="lib.js"></script>
 	<script>
 	
+        var stuff = {responses: null, tracts: null, city: {name: null, geoid: null}};
+	
         function try_placename()
         {
             update_status('Loading city tracts…');
@@ -17,51 +19,99 @@
 
 	    function loaded_tracts(city_geoid, city_name, tracts)
 	    {
-            function onload(tracts)
-            {
-                loaded_data(city_geoid, city_name, tracts);
-            }
-
+	        stuff.city.geoid = city_geoid;
+	        stuff.city.name = city_name;
+	    
             update_status('Found ' + tracts.length + ' tracts. Loading data…');
-            load_tract_data(tracts, onload);
+            load_tract_data(tracts, loaded_tract_data);
 	    }
 	    
-	    function loaded_data(city_geoid, city_name, tracts)
+	    function loaded_tract_data(tracts)
 	    {
-            function onload(responses)
-            {
-                loaded_spreadsheet(city_geoid, city_name, tracts, responses);
-            }
-
+	        stuff.tracts = tracts;
+	    
             function onerror(reason, ttop)
             {
                 alert('Failed to load spreadsheet: ' + reason);
             }
 
-            update_status('Loaded data for ' + tracts.length + ' tracts in ' + city_name + '. Loading spreadsheet…');
-            load_spreadsheet(get_query_variable('gdoc'), 'Survey Results All', onload, onerror);
+            update_status('Loaded data for ' + tracts.length + ' tracts in ' + stuff.city.name + '. Loading spreadsheet…');
+            load_spreadsheet(get_query_variable('gdoc'), 'Survey Results All', loaded_spreadsheet, onerror);
 	    }
 
-        function loaded_spreadsheet(city_geoid, city_name, tracts, all_responses)
+        function loaded_spreadsheet(all_responses)
         {
-            function oncorrelate(tracts)
-            {
-                update_status('Found ' + tracts.length + ' tracts in ' + city_name + ' and a spreadsheet with ' + responses.length + ' geographic responses.');
-            }
-        
-            update_status('Found ' + tracts.length + ' tracts in ' + city_name + ' and a spreadsheet with ' + all_responses.length + ' responses.');
+            stuff.responses = all_responses;
             
-            var responses = [];
+            var geo_responses = [],
+                languages = {
+                "english": 0,
+                "spanish": 0,
+                "chinese": 0,
+                "vietnamese": 0
+                },
+                access = {
+                "computer-at-home": 0,
+                "cell-phone": 0,
+                "computer-at-work": 0,
+                "public-computer": 0,
+                "friend-computer": 0
+                };
             
             for(var i = 0; i < all_responses.length; i++)
             {
-                if(all_responses[i].feature)
+                var response = all_responses[i],
+                    language = response.fields['Language spoken at home'];
+                
+                if(language && language.toLocaleLowerCase() in languages) {
+                    languages[language.toLocaleLowerCase()] += 1;
+                }
+                
+                if(response.fields['Web on computer at home?']) {
+                    access['computer-at-home'] += 1;
+                }
+                
+                if(response.fields['Web on cell phone?']) {
+                    access['cell-phone'] += 1;
+                }
+                
+                if(response.fields['Web on computer at work?']) {
+                    access['computer-at-work'] += 1;
+                }
+                
+                if(response.fields['Web on public computer?']) {
+                    access['public-computer'] += 1;
+                }
+                
+                if(response.fields["Web on friend's computer?"]) {
+                    access['friend-computer'] += 1;
+                }
+
+                if(response.feature)
                 {
-                    responses.push(all_responses[i]);
+                    geo_responses.push(response);
                 }
             }
             
-            correlate_geographies(responses, tracts, oncorrelate);
+            for(var id in languages)
+            {
+                document.getElementById(id).innerText = languages[id];
+            }
+        
+            for(var id in access)
+            {
+                document.getElementById(id).innerText = access[id];
+            }
+        
+            update_status('Found ' + stuff.tracts.length + ' tracts in ' + stuff.city.name + ' and a spreadsheet with ' + geo_responses.length + ' geographic responses.');
+            correlate_geographies(geo_responses, stuff.tracts, correlated_spreadsheet);
+        }
+        
+        function correlated_spreadsheet(tracts)
+        {
+	        stuff.tracts = tracts;
+
+            update_status('Found ' + tracts.length + ' tracts in ' + stuff.city.name + ' and a spreadsheet with ' + stuff.responses.length + ' responses.');
         }
 
 	</script>
@@ -69,6 +119,23 @@
 <body>
 
     <p id="status">Hold on…</p>
+    
+    <h3>Response Languages:</h3>
+    <ul>
+        <li><span id="english">—</span> English</li>
+        <li><span id="spanish">—</span> Spanish</li>
+        <li><span id="chinese">—</span> Chinese</li>
+        <li><span id="vietnamese">—</span> Vietnamese</li>
+    </ul>
+    
+    <h3>Web Usage:</h3>
+    <ul>
+        <li><span id="computer-at-home">—</span> Computer at home</li>
+        <li><span id="cell-phone">—</span> Cell phone</li>
+        <li><span id="computer-at-work">—</span> Computer at work</li>
+        <li><span id="public-computer">—</span> Public computer</li>
+        <li><span id="friend-computer">—</span> Friend’s computer</li>
+    </ul>
 
     <script>
         try_placename()
