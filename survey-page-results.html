@@ -5,6 +5,7 @@
 	<title>Resident Web Use Results</title>
 	<script src="https://code.jquery.com/jquery-1.11.2.min.js" charset="utf-8"></script>
 	<script src="turf.min.js"></script>
+	<script src="regression.js"></script>
 	<script src="tabletop.js"></script>
 	<script src="lib.js"></script>
 	<script>
@@ -110,6 +111,40 @@
         function correlated_spreadsheet(tracts)
         {
 	        stuff.tracts = tracts;
+	        
+	        var points = [],
+	            total = 0;
+	        
+	        for(var i = 0; i < tracts.length; i++)
+	        {
+	            var t = tracts[i],
+	                e = t.data['B03002012'].estimate,
+	                r = t.responses;
+
+	            points.push([e, r]);
+	            total += r;
+	        }
+	        
+	        var average = total / points.length;
+	        
+	        console.log(points.length, 'points', average, 'average');
+	        
+	        // Calculate linear regression using ordinary least squares
+	        var result = regression('linear', points),
+	            ss_residual = 0, ss_total = 0;
+	        
+	        for(var i = 0; i < points.length; i++)
+	        {
+	            var x = points[i][0], actual = points[i][1],
+	                expected = result.points[i][1];
+	            
+	            ss_residual += Math.pow(actual - expected, 2);
+	            ss_total += Math.pow(actual - average, 2);
+	        }
+	        
+	        console.log(ss_total, 'total', ss_residual, 'residual');
+	        
+	        console.log('R^2:', 1 - ss_residual / ss_total);
 
             update_status('Found ' + tracts.length + ' tracts in ' + stuff.city.name + ' and a spreadsheet with ' + stuff.responses.length + ' responses.');
         }
