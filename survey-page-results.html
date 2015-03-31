@@ -112,39 +112,21 @@
         {
 	        stuff.tracts = tracts;
 	        
-	        var points = [],
-	            total = 0;
+	        var regressions = [
+	            ['Hispanic population', calculate_regression(tracts, 'B03002012', 'B01003001')],
+	            ['Black population', calculate_regression(tracts, 'B03002004', 'B01003001')],
+	            ['White population', calculate_regression(tracts, 'B03002003', 'B01003001')],
+	            ['Owner-occupied housing', calculate_regression(tracts, 'B25003002', 'B25003001')],
+	            ['Median household income', calculate_regression(tracts, 'B19013001', false)]
+	            ];
 	        
-	        for(var i = 0; i < tracts.length; i++)
+	        // Sort from most to least significant
+	        regressions.sort(function(a, b) { return Math.abs(b[1]) - Math.abs(a[1]) });
+	        
+	        for(var i = 0; i < regressions.length; i++)
 	        {
-	            var t = tracts[i],
-	                e = t.data['B03002012'].estimate,
-	                r = t.responses;
-
-	            points.push([e, r]);
-	            total += r;
+	            console.log(regressions[i][0], regressions[i][1]);
 	        }
-	        
-	        var average = total / points.length;
-	        
-	        console.log(points.length, 'points', average, 'average');
-	        
-	        // Calculate linear regression using ordinary least squares
-	        var result = regression('linear', points),
-	            ss_residual = 0, ss_total = 0;
-	        
-	        for(var i = 0; i < points.length; i++)
-	        {
-	            var x = points[i][0], actual = points[i][1],
-	                expected = result.points[i][1];
-	            
-	            ss_residual += Math.pow(actual - expected, 2);
-	            ss_total += Math.pow(actual - average, 2);
-	        }
-	        
-	        console.log(ss_total, 'total', ss_residual, 'residual');
-	        
-	        console.log('R^2:', 1 - ss_residual / ss_total);
 
             update_status('Found ' + tracts.length + ' tracts in ' + stuff.city.name + ' and a spreadsheet with ' + stuff.responses.length + ' responses.');
         }
