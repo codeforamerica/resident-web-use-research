@@ -113,10 +113,10 @@
 	        stuff.tracts = tracts;
 	        
 	        var regressions = [
-	            ['Hispanic population', calculate_regression(tracts, 'B03002012', 'B01003001')],
-	            ['Black population', calculate_regression(tracts, 'B03002004', 'B01003001')],
-	            ['White population', calculate_regression(tracts, 'B03002003', 'B01003001')],
-	            ['Owner-occupied housing', calculate_regression(tracts, 'B25003002', 'B25003001')],
+	            ['Hispanic population', calculate_regression(tracts, 'B03002012', false /*'B01003001'*/)],
+	            ['Black population', calculate_regression(tracts, 'B03002004', false /*'B01003001'*/)],
+	            ['White population', calculate_regression(tracts, 'B03002003', false /*'B01003001'*/)],
+	            ['Owner-occupied housing', calculate_regression(tracts, 'B25003002', false /*'B25003001'*/)],
 	            ['Median household income', calculate_regression(tracts, 'B19013001', false)]
 	            ];
 	        
