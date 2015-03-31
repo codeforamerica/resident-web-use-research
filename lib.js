@@ -286,6 +286,13 @@ function correlate_geographies(responses, tracts, oncorrelated)
     oncorrelated(tracts);
 }
 
+/**
+ * Calculate coefficient of determination for tract responses, return R-squared.
+ *
+ * tracts is a list of Tract objects.
+ * numerator is required data column to calculate against.
+ * denominator is optional data column to calculate against.
+ */
 function calculate_regression(tracts, numerator, denominator)
 {
     var points = [],

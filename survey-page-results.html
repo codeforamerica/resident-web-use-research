@@ -126,6 +126,10 @@
 	        for(var i = 0; i < regressions.length; i++)
 	        {
 	            console.log(regressions[i][0], regressions[i][1]);
+	            
+	            var li = document.createElement('li');
+	            li.innerText = regressions[i][0] + ': ' + regressions[i][1].toFixed(3);
+	            document.getElementById('regressions').appendChild(li);
 	        }
 
             update_status('Found ' + tracts.length + ' tracts in ' + stuff.city.name + ' and a spreadsheet with ' + stuff.responses.length + ' responses.');
@@ -136,6 +140,11 @@
 <body>
 
     <p id="status">Hold on…</p>
+    
+    <h3>Regressions:</h3>
+    <ol id="regressions">
+    </ol>
+    <p>(largest to smallest)</p>
     
     <h3>Response Languages:</h3>
     <ul>
