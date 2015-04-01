@@ -15,7 +15,6 @@
     </style>
 
     <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
-    <script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.3.0"></script>
     <script src="https://code.jquery.com/jquery-1.11.2.min.js" charset="utf-8"></script>
 	<script src="turf.min.js"></script>
 	<script src="regression.js"></script>
@@ -188,19 +187,24 @@
                     };
             
             var map = new L.Map(map_id, options),
-                tile_layer = new L.StamenTileLayer('toner-lite');
+                tile_layer = new L.TileLayer('http://{s}.tile.stamen.com/toner-lite/{z}/{x}/{y}@2x.png');
 
             map.addLayer(tile_layer);
+            
+            function style(feature)
+            {
+                return {
+                    "stroke": false,
+                    "color": "black",
+                    "weight": .2,
+                    "opacity": 1,
+                    "fillColor": "#0A6739",
+                    "fillOpacity": 0.3,
+                    "clickable": false
+                };
+            }
 
-            var style = {
-                "color": "black",
-                "weight": 1,
-                "fillColor": "#0A6739",
-                "opacity": 1,
-                "clickable": false
-            };
-
-            L.geoJson(geojson, { style: style }).addTo(map);
+            L.geoJson(geojson, {style: style}).addTo(map);
         }
 
 	</script>
