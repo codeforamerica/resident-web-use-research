@@ -286,6 +286,58 @@ function correlate_geographies(responses, tracts, oncorrelated)
     oncorrelated(tracts);
 }
 
+/**
+ * Calculate coefficient of determination for tract responses, return R-squared.
+ *
+ * tracts is a list of Tract objects.
+ * numerator is required data column to calculate against.
+ * denominator is optional data column to calculate against.
+ */
+function calculate_regression(tracts, numerator, denominator)
+{
+    var points = [],
+        total = 0;
+    
+    for(var i = 0; i < tracts.length; i++)
+    {
+        var tract = tracts[i],
+            population = tract.data[numerator].estimate,
+            responses = tract.responses;
+        
+        if(denominator)
+        {
+            population /= tract.data[denominator].estimate;
+        }
+        
+        if(!isNaN(population))
+        {
+            points.push([population, responses]);
+            total += responses;
+        }
+    }
+    
+    var average = total / points.length;
+    
+    // Calculate linear regression using ordinary least squares
+    var result = regression('linear', points),
+        ss_residual = 0, ss_total = 0;
+    
+    for(var i = 0; i < points.length; i++)
+    {
+        var actual = points[i][1],
+            expected = result.points[i][1];
+        
+        ss_residual += Math.pow(actual - expected, 2);
+        ss_total += Math.pow(actual - average, 2);
+    }
+    
+    var r_squared = 1 - ss_residual / ss_total;
+    
+    console.log(numerator, ss_total, 'total', ss_residual, 'residual', points.length, 'points', average, 'average', 'R^2:', r_squared);
+    
+    return r_squared;
+}
+
 function update_status(message)
 {
     document.getElementById('status').innerText = message;
