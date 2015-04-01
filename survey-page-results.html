@@ -7,7 +7,7 @@
     <style type="text/css">
         .container {
             display: flex;
-            height: 900px;
+            height: 500px;
         }
         .container div {
             flex: 1;
@@ -36,8 +36,28 @@
 	        stuff.city.geoid = city_geoid;
 	        stuff.city.name = city_name;
 	    
+            var geojson = {features: [], type: 'GeometryCollection'},
+                envelope = undefined;
+            
+            for(var i = 0; i < tracts.length; i++)
+            {
+                var feature = tracts[i].feature;
+                geojson.features.push(feature);
+                
+                if(envelope == undefined) {
+                    envelope = turf.envelope(feature);
+
+                } else {
+                    envelope = turf.envelope(turf.union(envelope, feature));
+                }
+            }
+            
+            console.log(envelope);
+            load_map('survey-map', 37.7707, -122.3781, geojson);
+            load_map('recommendation-map', 37.7707, -122.3781, geojson);
+
             update_status('Found ' + tracts.length + ' tracts. Loading data…');
-            load_tract_data(tracts, loaded_tract_data);
+            //load_tract_data(tracts, loaded_tract_data);
 	    }
 	    
 	    function loaded_tract_data(tracts)
@@ -172,6 +192,11 @@
 
     <p id="status">Hold on…</p>
     
+    <div class="container">
+        <div id="survey-map" ></div>
+        <div id="recommendation-map"></div>
+    </div>
+
     <h3>Regressions:</h3>
     <ol id="regressions">
     </ol>
@@ -194,17 +219,8 @@
         <li><span id="friend-computer">—</span> Friend’s computer</li>
     </ul>
 
-    <div class='container'>
-        <div id='survey-map' ></div>
-        <div id='recommendation-map'></div>
-    </div>
-
     <script>
-        //try_placename()
-        $.getJSON('tracts.geojson', function(data) {
-            load_map('survey-map', 37.7707, -122.3781, data);
-            load_map('recommendation-map', 37.7707, -122.3781, data);
-        });
+        try_placename()
     </script>
 </body>
 </html>

@@ -128,7 +128,11 @@ function load_city_tracts(city_name, onloaded_tracts)
         while(geojson.features.length)
         {
             feature = geojson.features.shift();
-            tracts.push(new Tract(feature.properties.geoid, feature));
+            
+            if(feature.properties.aland > 0)
+            {
+                tracts.push(new Tract(feature.properties.geoid, feature));
+            }
         }
         
         onloaded_tracts(info.muni_geoid, info.display_name, tracts);
