@@ -36,28 +36,18 @@
 	        stuff.city.geoid = city_geoid;
 	        stuff.city.name = city_name;
 	    
-            var geojson = {features: [], type: 'GeometryCollection'},
-                envelope = undefined;
+            var geojson = {features: [], type: 'GeometryCollection'};
             
             for(var i = 0; i < tracts.length; i++)
             {
-                var feature = tracts[i].feature;
-                geojson.features.push(feature);
-                
-                if(envelope == undefined) {
-                    envelope = turf.envelope(feature);
-
-                } else {
-                    envelope = turf.envelope(turf.union(envelope, feature));
-                }
+                geojson.features.push(tracts[i].feature);
             }
             
-            console.log(envelope);
-            load_map('survey-map', 37.7707, -122.3781, geojson);
-            load_map('recommendation-map', 37.7707, -122.3781, geojson);
+            load_map('survey-map', geojson);
+            load_map('recommendation-map', geojson);
 
             update_status('Found ' + tracts.length + ' tracts. Loading data…');
-            //load_tract_data(tracts, loaded_tract_data);
+            load_tract_data(tracts, loaded_tract_data);
 	    }
 	    
 	    function loaded_tract_data(tracts)
@@ -168,13 +158,40 @@
             update_status('Found ' + tracts.length + ' tracts in ' + stuff.city.name + ' and a spreadsheet with ' + stuff.responses.length + ' responses.');
         }
 
-        function load_map(map_id, latitude, longitude, geojson) {
-            var map = new L.Map(map_id, {
-                center: new L.LatLng(latitude, longitude),
-                zoom: 12
-            });
-            var tile_layer = new L.StamenTileLayer('toner-lite');
+        function load_map(map_id, geojson)
+        {
+            var envelope, feature;
+            
+            for(var i = 0; i < geojson.features.length; i++)
+            {
+                feature = geojson.features[i];
+                
+                if(envelope == undefined) {
+                    envelope = turf.envelope(feature);
+
+                } else {
+                    envelope = turf.envelope(turf.union(envelope, feature));
+                }
+            }
+            
+            var extent = turf.extent(turf.buffer(envelope, 2, 'kilometers')),
+                xmin = extent[0], ymin = extent[1],
+                xmax = extent[2], ymax = extent[3],
+                center = new L.LatLng(ymax/2 + ymin/2, xmax/2 + xmin/2),
+                northeast = new L.LatLng(ymax, xmax),
+                southwest = new L.LatLng(ymin, xmin),
+                maxBounds = new L.latLngBounds(northeast, southwest),
+                options = {
+                    center: center, zoom: 12,
+                    maxBounds: maxBounds, minZoom: 9, maxZoom: 16,
+                    scrollWheelZoom: false
+                    };
+            
+            var map = new L.Map(map_id, options),
+                tile_layer = new L.StamenTileLayer('toner-lite');
+
             map.addLayer(tile_layer);
+
             var style = {
                 "color": "black",
                 "weight": 1,
