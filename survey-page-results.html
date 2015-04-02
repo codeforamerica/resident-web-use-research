@@ -22,7 +22,11 @@
 	<script src="lib.js"></script>
 	<script>
 	
-        var stuff = {responses: null, tracts: null, city: {name: null, geoid: null}};
+        var stuff = {
+            responses: null, tracts: null,
+            city: {name: null, geoid: null},
+            map_layers: {survey: null, recommendation: null}
+            };
 	
         function try_placename()
         {
@@ -42,16 +46,58 @@
                 geojson.features.push(tracts[i].feature);
             }
             
-            build_map('survey-map', geojson);
-            build_map('recommendation-map', geojson);
+            stuff.map_layers.survey = build_map('survey-map', geojson);
+            stuff.map_layers.recommendation = build_map('recommendation-map', geojson);
 
             update_status('Found ' + tracts.length + ' tracts. Loading data…');
             load_tract_data(tracts, loaded_tract_data);
 	    }
 	    
+        function choropleth_style_orange(feature)
+        {
+            if(feature.properties.population > 5356) {
+                var color = "rgb(0,109,44)";
+            
+            } else if(feature.properties.population > 4178) {
+                var color = "rgb(49,163,84)";
+            
+            } else if(feature.properties.population > 3430) {
+                var color = "rgb(116,196,118)";
+            
+            } else if(feature.properties.population > 2544) {
+                var color = "rgb(186,228,179)";
+            
+            } else {
+                var color = "rgb(237,248,233)";
+            }
+    
+            return {
+                "stroke": false,
+                "color": "black",
+                "weight": .2,
+                "opacity": 1,
+                "fillColor": color,
+                "fillOpacity": 0.5,
+                "clickable": false
+            };
+        }
+
 	    function loaded_tract_data(tracts)
 	    {
 	        stuff.tracts = tracts;
+	        
+            var geojson = {features: [], type: 'GeometryCollection'};
+            
+            for(var i = 0; i < tracts.length; i++)
+            {
+                var feature = tracts[i].feature;
+                feature.properties.population = tracts[i].data['B01003001'].estimate;
+                geojson.features.push(feature);
+            }
+	        
+	        stuff.map_layers.recommendation.clearLayers();
+	        stuff.map_layers.recommendation.addData(geojson);
+	        stuff.map_layers.recommendation.setStyle(choropleth_style_orange);
 	    
             function onerror(reason, ttop)
             {

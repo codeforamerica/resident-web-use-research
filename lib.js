@@ -342,6 +342,22 @@ function calculate_regression(tracts, numerator, denominator)
     return r_squared;
 }
 
+function choropleth_style_null()
+{
+    var random = Math.floor(Math.random() * 4),
+        colors = ['#666', '#777', '#888', '#999'];
+    
+    return {
+        "stroke": false,
+        "color": "black",
+        "weight": .2,
+        "opacity": 1,
+        "fillColor": colors[random],
+        "fillOpacity": 0.3,
+        "clickable": false
+    };
+}
+
 /**
  * Build a map with GeoJSON data.
  *
@@ -381,23 +397,7 @@ function build_map(element_id, geojson)
 
     map.addLayer(tile_layer);
     
-    function style(feature)
-    {
-        var random = Math.floor(Math.random() * 4),
-            colors = ['#666', '#777', '#888', '#999'];
-        
-        return {
-            "stroke": false,
-            "color": "black",
-            "weight": .2,
-            "opacity": 1,
-            "fillColor": colors[random],
-            "fillOpacity": 0.3,
-            "clickable": false
-        };
-    }
-
-    var datalayer = L.geoJson(geojson, {style: style}).addTo(map);
+    var datalayer = L.geoJson(geojson, {style: choropleth_style_null}).addTo(map);
     
     return datalayer;
 }
