@@ -128,6 +128,7 @@ function load_city_tracts(city_name, onloaded_tracts)
         while(geojson.features.length)
         {
             feature = geojson.features.shift();
+            feature.id = feature.properties.geoid;
             
             if(feature.properties.aland > 0)
             {
@@ -180,8 +181,9 @@ function load_tract_data(original_tracts, onloaded_all_data)
         while(request_tracts.length)
         {
             var tract = request_tracts.shift(),
-                datum = data[tract.geoid];
-
+                datum = data[tract.geoid],
+                sq_km = tract.feature.properties.aland / 1000000;
+            
             tract.data = {
                 // total population
                 'B01003001': { estimate: datum['B01003'].estimate['B01003001'],
@@ -212,9 +214,27 @@ function load_tract_data(original_tracts, onloaded_all_data)
                                error: datum['B25003'].error['B25003001'] },
                 // owner-occupied housing
                 'B25003002': { estimate: datum['B25003'].estimate['B25003002'],
-                               error: datum['B25003'].error['B25003002'] }
-                };
+                               error: datum['B25003'].error['B25003002'] },
 
+                // people per square km.
+                'population density':
+                    { estimate: datum['B01003'].estimate['B01003001'] / sq_km,
+                         error: datum['B01003'].error['B01003001'] / sq_km },
+
+                'hispanic percentage':
+                    { estimate: datum['B03002'].estimate['B03002012'] / datum['B01003'].estimate['B01003001'],
+                         error: datum['B03002'].error['B03002012'] / datum['B01003'].error['B01003001'] },
+                'asian percentage':
+                    { estimate: datum['B03002'].estimate['B03002006'] / datum['B01003'].estimate['B01003001'],
+                         error: datum['B03002'].error['B03002006'] / datum['B01003'].error['B01003001'] },
+                'hispanic density':
+                    { estimate: datum['B03002'].estimate['B03002012'] / sq_km,
+                         error: datum['B03002'].error['B03002012'] / sq_km },
+                'asian density':
+                    { estimate: datum['B03002'].estimate['B03002006'] / sq_km,
+                         error: datum['B03002'].error['B03002006'] / sq_km }
+                };
+            
             output_tracts.push(tract);
         }
         
@@ -348,13 +368,13 @@ function choropleth_style_null()
         colors = ['#666', '#777', '#888', '#999'];
     
     return {
+        //"clickable": false,
         "stroke": false,
         "color": "black",
         "weight": .2,
         "opacity": 1,
         "fillColor": colors[random],
-        "fillOpacity": 0.3,
-        "clickable": false
+        "fillOpacity": 0.3
     };
 }
 
@@ -397,7 +417,12 @@ function build_map(element_id, geojson)
 
     map.addLayer(tile_layer);
     
-    var datalayer = L.geoJson(geojson, {style: choropleth_style_null}).addTo(map);
+    function onEachFeature(feature, layer)
+    {
+        layer.bindPopup('<a href="http://censusreporter.org/profiles/'+feature.properties.geoid+'" target="_blank">'+feature.properties.geoid+'</a>');
+    }
+    
+    var datalayer = L.geoJson(geojson, {style: choropleth_style_null, onEachFeature: onEachFeature}).addTo(map);
     
     return datalayer;
 }

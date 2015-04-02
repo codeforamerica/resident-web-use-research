@@ -53,35 +53,54 @@
             load_tract_data(tracts, loaded_tract_data);
 	    }
 	    
-        function choropleth_style_orange(feature)
-        {
-            if(feature.properties.population > 5356) {
-                var color = "rgb(0,109,44)";
+	    function get_style_function(tracts, data_point)
+	    {
+	        var value, data = {}, histogram = [];
+	        
+	        for(var i = 0; i < tracts.length; i++)
+	        {
+	            value = tracts[i].data[data_point].estimate;
+	            data[tracts[i].geoid] = value;
+	            histogram.push(value);
+	        }
+	        
+	        // LOL Javascript sorts alphabetically
+	        histogram.sort(function(a, b) { return a - b });
+	        
+	        console.log(histogram);
+	        
+	        return function(feature)
+	        {
+	            var value = data[feature.id];
+	            
+	            if(value < histogram[Math.floor(histogram.length * 1/5)] || isNaN(value)) {
+                    var color = "rgb(237,248,233)";
             
-            } else if(feature.properties.population > 4178) {
-                var color = "rgb(49,163,84)";
+                } else if(value < histogram[Math.floor(histogram.length * 2/5)]) {
+                    var color = "rgb(186,228,179)";
             
-            } else if(feature.properties.population > 3430) {
-                var color = "rgb(116,196,118)";
+                } else if(value < histogram[Math.floor(histogram.length * 3/5)]) {
+                    var color = "rgb(116,196,118)";
             
-            } else if(feature.properties.population > 2544) {
-                var color = "rgb(186,228,179)";
+                } else if(value < histogram[Math.floor(histogram.length * 4/5)]) {
+                    var color = "rgb(49,163,84)";
             
-            } else {
-                var color = "rgb(237,248,233)";
-            }
+                } else {
+                    var color = "rgb(0,109,44)";
+                }
     
-            return {
-                "stroke": false,
-                "color": "black",
-                "weight": .2,
-                "opacity": 1,
-                "fillColor": color,
-                "fillOpacity": 0.5,
-                "clickable": false
-            };
-        }
-
+                return {
+                    "stroke": true,
+                    "color": "rgb(0,109,44)",
+                    "weight": .5,
+                    "opacity": 1,
+                    "fillColor": color,
+                    "fillOpacity": 0.65,
+                    "clickable": false
+                };
+	        }
+	    }
+	    
 	    function loaded_tract_data(tracts)
 	    {
 	        stuff.tracts = tracts;
@@ -91,13 +110,14 @@
             for(var i = 0; i < tracts.length; i++)
             {
                 var feature = tracts[i].feature;
-                feature.properties.population = tracts[i].data['B01003001'].estimate;
                 geojson.features.push(feature);
             }
+            
+            var style_function = get_style_function(stuff.tracts, 'hispanic density');
 	        
 	        stuff.map_layers.recommendation.clearLayers();
 	        stuff.map_layers.recommendation.addData(geojson);
-	        stuff.map_layers.recommendation.setStyle(choropleth_style_orange);
+	        stuff.map_layers.recommendation.setStyle(style_function);
 	    
             function onerror(reason, ttop)
             {
