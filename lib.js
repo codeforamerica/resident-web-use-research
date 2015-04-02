@@ -409,7 +409,7 @@ function build_map(element_id, geojson)
         options = {
             center: center, zoom: 12,
             maxBounds: maxBounds, minZoom: 9, maxZoom: 16,
-            scrollWheelZoom: false
+            scrollWheelZoom: false, attributionControl: false
             };
     
     var map = new L.Map(element_id, options),
@@ -417,14 +417,20 @@ function build_map(element_id, geojson)
 
     map.addLayer(tile_layer);
     
+    var attr = L.control.attribution({prefix: '', position: 'bottomright'});
+    attr.addAttribution('Demographic data via <a target="_blank" href="http://censusreporter.org">Census Reporter</a>');
+    attr.addAttribution('<a target="_blank" href="http://maps.stamen.com">Cartography</a> by <a target="_blank" href="http://stamen.com">Stamen</a>');
+    attr.addAttribution('Map Data <a target="_blank" href="http://www.openstreetmap.org/copyright">&copy; OSM contributors</a>');
+    map.addControl(attr);
+    
     function onEachFeature(feature, layer)
     {
-        layer.bindPopup('<a href="http://censusreporter.org/profiles/'+feature.properties.geoid+'" target="_blank">'+feature.properties.geoid+'</a>');
+        layer.bindPopup('<a target="_blank" href="http://censusreporter.org/profiles/'+feature.properties.geoid+'">'+feature.properties.geoid+'</a>');
     }
     
     var datalayer = L.geoJson(geojson, {style: choropleth_style_null, onEachFeature: onEachFeature}).addTo(map);
     
-    return datalayer;
+    return {data: datalayer, map: map};
 }
 
 function update_status(message)

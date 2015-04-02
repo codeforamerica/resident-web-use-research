@@ -16,6 +16,7 @@
 
     <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
     <script src="https://code.jquery.com/jquery-1.11.2.min.js" charset="utf-8"></script>
+	<script src="L.Control.Button.js"></script>
 	<script src="turf.min.js"></script>
 	<script src="regression.js"></script>
 	<script src="tabletop.js"></script>
@@ -25,7 +26,10 @@
         var stuff = {
             responses: null, tracts: null,
             city: {name: null, geoid: null},
-            map_layers: {survey: null, recommendation: null}
+            maps: {
+                recommendation: {data: null, map: null},
+                survey: {data: null, map: null}
+                }
             };
 	
         function try_placename()
@@ -46,9 +50,9 @@
                 geojson.features.push(tracts[i].feature);
             }
             
-            stuff.map_layers.survey = build_map('survey-map', geojson);
-            stuff.map_layers.recommendation = build_map('recommendation-map', geojson);
-
+            stuff.maps.survey = build_map('survey-map', geojson);
+            stuff.maps.recommendation = build_map('recommendation-map', geojson);
+            
             update_status('Found ' + tracts.length + ' tracts. Loading data…');
             load_tract_data(tracts, loaded_tract_data);
 	    }
@@ -115,9 +119,9 @@
             
             var style_function = get_style_function(stuff.tracts, 'hispanic density');
 	        
-	        stuff.map_layers.recommendation.clearLayers();
-	        stuff.map_layers.recommendation.addData(geojson);
-	        stuff.map_layers.recommendation.setStyle(style_function);
+	        stuff.maps.recommendation.data.clearLayers();
+	        stuff.maps.recommendation.data.addData(geojson);
+	        stuff.maps.recommendation.data.setStyle(style_function);
 	    
             function onerror(reason, ttop)
             {
