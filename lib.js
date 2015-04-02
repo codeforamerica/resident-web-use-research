@@ -342,6 +342,66 @@ function calculate_regression(tracts, numerator, denominator)
     return r_squared;
 }
 
+/**
+ * Build a map with GeoJSON data.
+ *
+ * Return reference to GeoJSON data layer.
+ */
+function build_map(element_id, geojson)
+{
+    var envelope, feature;
+    
+    for(var i = 0; i < geojson.features.length; i++)
+    {
+        feature = geojson.features[i];
+        
+        if(envelope == undefined) {
+            envelope = turf.envelope(feature);
+
+        } else {
+            envelope = turf.envelope(turf.union(envelope, feature));
+        }
+    }
+    
+    var extent = turf.extent(turf.buffer(envelope, 2, 'kilometers')),
+        xmin = extent[0], ymin = extent[1],
+        xmax = extent[2], ymax = extent[3],
+        center = new L.LatLng(ymax/2 + ymin/2, xmax/2 + xmin/2),
+        northeast = new L.LatLng(ymax, xmax),
+        southwest = new L.LatLng(ymin, xmin),
+        maxBounds = new L.latLngBounds(northeast, southwest),
+        options = {
+            center: center, zoom: 12,
+            maxBounds: maxBounds, minZoom: 9, maxZoom: 16,
+            scrollWheelZoom: false
+            };
+    
+    var map = new L.Map(element_id, options),
+        tile_layer = new L.TileLayer('http://{s}.tile.stamen.com/toner-lite/{z}/{x}/{y}@2x.png');
+
+    map.addLayer(tile_layer);
+    
+    function style(feature)
+    {
+        var random = Math.floor(Math.random() * 4),
+            colors = ['#666', '#777', '#888', '#999'];
+        
+        return {
+            "stroke": false,
+            "color": "black",
+            "weight": .2,
+            "opacity": 1,
+            "fillColor": colors[random],
+            "fillOpacity": 0.3,
+            "clickable": false
+        };
+    }
+
+    var datalayer = L.geoJson(geojson, {style: style}).addTo(map);
+    
+    return datalayer;
+}
+
 function update_status(message)
 {
     document.getElementById('status').innerText = message;
