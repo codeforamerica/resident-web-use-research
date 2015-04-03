@@ -362,6 +362,106 @@ function calculate_regression(tracts, numerator, denominator)
     return r_squared;
 }
 
+/**
+ *
+ */
+function get_style_function(tracts, data_point)
+{
+    var value, data = {}, histogram = [];
+    
+    for(var i = 0; i < tracts.length; i++)
+    {
+        value = tracts[i].data[data_point].estimate;
+        data[tracts[i].geoid] = value;
+        histogram.push(value);
+    }
+    
+    // LOL Javascript sorts alphabetically
+    histogram.sort(function(a, b) { return a - b });
+    
+    return function(feature)
+    {
+        var value = data[feature.id];
+        
+        if(value < histogram[Math.floor(histogram.length * 1/5)] || isNaN(value)) {
+            var color = "rgb(237,248,233)";
+    
+        } else if(value < histogram[Math.floor(histogram.length * 2/5)]) {
+            var color = "rgb(186,228,179)";
+    
+        } else if(value < histogram[Math.floor(histogram.length * 3/5)]) {
+            var color = "rgb(116,196,118)";
+    
+        } else if(value < histogram[Math.floor(histogram.length * 4/5)]) {
+            var color = "rgb(49,163,84)";
+    
+        } else {
+            var color = "rgb(0,109,44)";
+        }
+
+        return {
+            "stroke": true,
+            "color": "rgb(0,109,44)",
+            "weight": .5,
+            "opacity": 1,
+            "fillColor": color,
+            "fillOpacity": 0.65,
+            "clickable": false
+        };
+    }
+}
+
+/**
+ *
+ */
+var ButtonsControl = L.Control.extend({
+    
+    options: {position: 'topright'},
+    
+    initialize: function(datalayer, tracts, options)
+    {
+        this.tracts = tracts;
+        this.datalayer = datalayer;
+        L.Util.setOptions(this, options);
+    },
+    
+    onAdd: function(map)
+    {
+        var buttons = this;
+        var div = document.createElement('div');
+        
+        var button1 = document.createElement('button');
+        button1.innerText = 'Hispanic';
+        button1.onclick = function() { buttons.showLayer('hispanic density') };
+        div.appendChild(button1);
+        
+        var button2 = document.createElement('button');
+        button2.innerText = 'Asian';
+        button2.onclick = function() { buttons.showLayer('asian density') };
+        div.appendChild(button2);
+        
+        this.showLayer('hispanic density');
+        return div;
+    },
+    
+    showLayer: function(layer_name)
+    {
+        var geojson = {features: [], type: 'GeometryCollection'};
+    
+        for(var i = 0; i < this.tracts.length; i++)
+        {
+            geojson.features.push(this.tracts[i].feature);
+        }
+    
+        var style_function = get_style_function(this.tracts, layer_name);
+    
+        this.datalayer.clearLayers();
+        this.datalayer.addData(geojson);
+        this.datalayer.setStyle(style_function);
+    }
+    
+});
+
 function choropleth_style_null()
 {
     var random = Math.floor(Math.random() * 4),

@@ -16,7 +16,6 @@
 
     <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
     <script src="https://code.jquery.com/jquery-1.11.2.min.js" charset="utf-8"></script>
-	<script src="L.Control.Button.js"></script>
 	<script src="turf.min.js"></script>
 	<script src="regression.js"></script>
 	<script src="tabletop.js"></script>
@@ -57,71 +56,12 @@
             load_tract_data(tracts, loaded_tract_data);
 	    }
 	    
-	    function get_style_function(tracts, data_point)
-	    {
-	        var value, data = {}, histogram = [];
-	        
-	        for(var i = 0; i < tracts.length; i++)
-	        {
-	            value = tracts[i].data[data_point].estimate;
-	            data[tracts[i].geoid] = value;
-	            histogram.push(value);
-	        }
-	        
-	        // LOL Javascript sorts alphabetically
-	        histogram.sort(function(a, b) { return a - b });
-	        
-	        console.log(histogram);
-	        
-	        return function(feature)
-	        {
-	            var value = data[feature.id];
-	            
-	            if(value < histogram[Math.floor(histogram.length * 1/5)] || isNaN(value)) {
-                    var color = "rgb(237,248,233)";
-            
-                } else if(value < histogram[Math.floor(histogram.length * 2/5)]) {
-                    var color = "rgb(186,228,179)";
-            
-                } else if(value < histogram[Math.floor(histogram.length * 3/5)]) {
-                    var color = "rgb(116,196,118)";
-            
-                } else if(value < histogram[Math.floor(histogram.length * 4/5)]) {
-                    var color = "rgb(49,163,84)";
-            
-                } else {
-                    var color = "rgb(0,109,44)";
-                }
-    
-                return {
-                    "stroke": true,
-                    "color": "rgb(0,109,44)",
-                    "weight": .5,
-                    "opacity": 1,
-                    "fillColor": color,
-                    "fillOpacity": 0.65,
-                    "clickable": false
-                };
-	        }
-	    }
-	    
 	    function loaded_tract_data(tracts)
 	    {
 	        stuff.tracts = tracts;
 	        
-            var geojson = {features: [], type: 'GeometryCollection'};
-            
-            for(var i = 0; i < tracts.length; i++)
-            {
-                var feature = tracts[i].feature;
-                geojson.features.push(feature);
-            }
-            
-            var style_function = get_style_function(stuff.tracts, 'hispanic density');
-	        
-	        stuff.maps.recommendation.data.clearLayers();
-	        stuff.maps.recommendation.data.addData(geojson);
-	        stuff.maps.recommendation.data.setStyle(style_function);
+	        var buttons = new ButtonsControl(stuff.maps.recommendation.data, tracts);
+	        stuff.maps.recommendation.map.addControl(buttons);
 	    
             function onerror(reason, ttop)
             {
