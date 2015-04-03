@@ -3,14 +3,34 @@
 <head>
 	<meta charset="utf-8" />
 	<title>Resident Web Use Results</title>
-	<script src="https://code.jquery.com/jquery-1.11.2.min.js" charset="utf-8"></script>
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+    <style type="text/css">
+        .container {
+            display: flex;
+            height: 500px;
+        }
+        .container div {
+            flex: 1;
+        }
+    </style>
+
+    <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-1.11.2.min.js" charset="utf-8"></script>
 	<script src="turf.min.js"></script>
 	<script src="regression.js"></script>
 	<script src="tabletop.js"></script>
 	<script src="lib.js"></script>
 	<script>
 	
-        var stuff = {responses: null, tracts: null, city: {name: null, geoid: null}};
+        var stuff = {
+            spreadsheet_url: null,
+            responses: null, tracts: null,
+            city: {name: null, geoid: null},
+            maps: {
+                recommendation: {data: null, map: null},
+                survey: {data: null, map: null}
+                }
+            };
 	
         function try_placename()
         {
@@ -23,6 +43,16 @@
 	        stuff.city.geoid = city_geoid;
 	        stuff.city.name = city_name;
 	    
+            var geojson = {features: [], type: 'GeometryCollection'};
+            
+            for(var i = 0; i < tracts.length; i++)
+            {
+                geojson.features.push(tracts[i].feature);
+            }
+            
+            stuff.maps.survey = build_map('survey-map', geojson);
+            stuff.maps.recommendation = build_map('recommendation-map', geojson);
+            
             update_status('Found ' + tracts.length + ' tracts. Loading data…');
             load_tract_data(tracts, loaded_tract_data);
 	    }
@@ -30,6 +60,9 @@
 	    function loaded_tract_data(tracts)
 	    {
 	        stuff.tracts = tracts;
+	        
+	        var buttons = new DemographicsControl(stuff.maps.recommendation.data, tracts);
+	        stuff.maps.recommendation.map.addControl(buttons);
 	    
             function onerror(reason, ttop)
             {
@@ -40,9 +73,10 @@
             load_spreadsheet(get_query_variable('gdoc'), 'Survey Results All', loaded_spreadsheet, onerror);
 	    }
 
-        function loaded_spreadsheet(all_responses)
+        function loaded_spreadsheet(all_responses, spreadsheet_url)
         {
             stuff.responses = all_responses;
+            stuff.spreadsheet_url = spreadsheet_url;
             
             var geo_responses = [],
                 languages = {
@@ -104,7 +138,7 @@
                 document.getElementById(id).innerText = access[id];
             }
         
-            update_status('Found ' + stuff.tracts.length + ' tracts in ' + stuff.city.name + ' and a spreadsheet with ' + geo_responses.length + ' geographic responses.');
+            update_status('Found ' + stuff.tracts.length + ' tracts in ' + stuff.city.name + ' and <a target="_blank" href="' + spreadsheet_url + '">a spreadsheet with ' + geo_responses.length + ' geographic responses</a>.');
             correlate_geographies(geo_responses, stuff.tracts, correlated_spreadsheet);
         }
         
@@ -132,7 +166,24 @@
 	            document.getElementById('regressions').appendChild(li);
 	        }
 
-            update_status('Found ' + tracts.length + ' tracts in ' + stuff.city.name + ' and a spreadsheet with ' + stuff.responses.length + ' responses.');
+            update_status('Found ' + tracts.length + ' tracts in ' + stuff.city.name + ' and <a target="_blank" href="'+stuff.spreadsheet_url+'">a spreadsheet with ' + stuff.responses.length + ' responses</a>.');
+            render_survey_map();
+        }
+        
+        function render_survey_map()
+        {
+            var geojson = {features: [], type: 'GeometryCollection'};
+    
+            for(var i = 0; i < stuff.tracts.length; i++)
+            {
+                geojson.features.push(stuff.tracts[i].feature);
+            }
+    
+            var style_function = get_style_function(stuff.tracts, RESPONSES, GREENS);
+    
+            stuff.maps.survey.data.clearLayers();
+            stuff.maps.survey.data.addData(geojson);
+            stuff.maps.survey.data.setStyle(style_function);
         }
 
 	</script>
@@ -141,6 +192,11 @@
 
     <p id="status">Hold on…</p>
     
+    <div class="container">
+        <div id="survey-map" ></div>
+        <div id="recommendation-map"></div>
+    </div>
+
     <h3>Regressions:</h3>
     <ol id="regressions">
     </ol>
@@ -166,6 +222,5 @@
     <script>
         try_placename()
     </script>
-
 </body>
 </html>
