@@ -415,7 +415,8 @@ function get_color_list(colors)
  */
 function get_style_function(tracts, data_point, colors)
 {
-    var value, data = {}, histogram = [],
+    var value, data = {},
+        histogram = [], minimum, maximum,
         color_list = get_color_list(colors);
     
     for(var i = 0; i < tracts.length; i++)
@@ -433,21 +434,28 @@ function get_style_function(tracts, data_point, colors)
     
     // LOL Javascript sorts alphabetically
     histogram.sort(function(a, b) { return a - b });
+    minimum = Math.min.apply(null, histogram);
+    maximum = Math.max.apply(null, histogram);
+    
+    function lerp(c)
+    {
+        return minimum + (maximum - minimum) * c;
+    }
     
     return function(feature)
     {
         var color, value = data[feature.id];
         
-        if(value < histogram[Math.floor(histogram.length * 1/5)] || isNaN(value)) {
+        if(value < lerp(.1) || isNaN(value)) {
             color = color_list[0];
     
-        } else if(value < histogram[Math.floor(histogram.length * 2/5)]) {
+        } else if(value < lerp(.2)) {
             color = color_list[1];
     
-        } else if(value < histogram[Math.floor(histogram.length * 3/5)]) {
+        } else if(value < lerp(.4)) {
             color = color_list[2];
     
-        } else if(value < histogram[Math.floor(histogram.length * 4/5)]) {
+        } else if(value < lerp(.7)) {
             color = color_list[3];
     
         } else {
@@ -497,13 +505,13 @@ var DemographicsControl = L.Control.extend({
             div.appendChild(document.createTextNode(' '));
         }
         
-        add_button('Hispanic', 'hispanic density', BLUES);
-        add_button('White', 'white density', BLUES);
-        add_button('Black', 'black density', BLUES);
-        add_button('Asian', 'asian density', BLUES);
-        add_button('Household Income', 'B19013001', ORANGES);
+        add_button('Hispanic', 'hispanic percentage', BLUES);
+        add_button('White', 'white percentage', BLUES);
+        add_button('Black', 'black percentage', BLUES);
+        add_button('Asian', 'asian percentage', BLUES);
+        add_button('Per Capita Income', 'B19301001', ORANGES);
 
-        this.showLayer('hispanic density', BLUES);
+        this.showLayer('hispanic percentage', BLUES);
         return div;
     },
     
