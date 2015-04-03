@@ -1,4 +1,6 @@
-var GEO_COLUMN = 'Geographic Area',
+var RESPONSES = 'Survey responses',
+    GREENS = 'Greens_05', BLUES = 'Blues_05', ORANGES = 'YlOrBr_05',
+    GEO_COLUMN = 'Geographic Area',
     CR_API_BASE = 'http://api.censusreporter.org/1.0',
     CR_API_PAGE = 25;
 
@@ -224,12 +226,25 @@ function load_tract_data(original_tracts, onloaded_all_data)
                 'hispanic percentage':
                     { estimate: datum['B03002'].estimate['B03002012'] / datum['B01003'].estimate['B01003001'],
                          error: datum['B03002'].error['B03002012'] / datum['B01003'].error['B01003001'] },
+                'white percentage':
+                    { estimate: datum['B03002'].estimate['B03002003'] / datum['B01003'].estimate['B01003001'],
+                         error: datum['B03002'].error['B03002003'] / datum['B01003'].error['B01003001'] },
+                'black percentage':
+                    { estimate: datum['B03002'].estimate['B03002004'] / datum['B01003'].estimate['B01003001'],
+                         error: datum['B03002'].error['B03002004'] / datum['B01003'].error['B01003001'] },
                 'asian percentage':
                     { estimate: datum['B03002'].estimate['B03002006'] / datum['B01003'].estimate['B01003001'],
                          error: datum['B03002'].error['B03002006'] / datum['B01003'].error['B01003001'] },
+
                 'hispanic density':
                     { estimate: datum['B03002'].estimate['B03002012'] / sq_km,
                          error: datum['B03002'].error['B03002012'] / sq_km },
+                'white density':
+                    { estimate: datum['B03002'].estimate['B03002003'] / sq_km,
+                         error: datum['B03002'].error['B03002003'] / sq_km },
+                'black density':
+                    { estimate: datum['B03002'].estimate['B03002004'] / sq_km,
+                         error: datum['B03002'].error['B03002004'] / sq_km },
                 'asian density':
                     { estimate: datum['B03002'].estimate['B03002006'] / sq_km,
                          error: datum['B03002'].error['B03002006'] / sq_km }
@@ -363,15 +378,55 @@ function calculate_regression(tracts, numerator, denominator)
 }
 
 /**
+ * Get a list of 5 RGB color values from Cynthia Brewer for a name.
  *
+ * colors is an optional constant like GREENS, BLUES, or ORANGES.
  */
-function get_style_function(tracts, data_point)
+function get_color_list(colors)
 {
-    var value, data = {}, histogram = [];
+    if(colors == GREENS) {
+        // http://soliton.vm.bytemark.co.uk/pub/cpt-city/cb/seq/tn/Greens_05.png.index.html
+        return ['rgb(237,248,233)', 'rgb(186,228,179)', 'rgb(116,196,118)',
+                'rgb(49,163,84)', 'rgb(0,109,44)'];
+
+    } else if(colors == BLUES) {
+        // http://soliton.vm.bytemark.co.uk/pub/cpt-city/cb/seq/tn/Blues_05.png.index.html
+        return ['rgb(239,243,255)', 'rgb(189,215,231)', 'rgb(107,174,214)',
+                'rgb(49,130,189)', 'rgb(8,81,156)'];
+
+    } else if(colors == ORANGES) {
+        // http://soliton.vm.bytemark.co.uk/pub/cpt-city/cb/seq/tn/YlOrBr_05.png.index.html
+        return ['rgb(255,255,212)', 'rgb(254,217,142)', 'rgb(254,153,41)',
+                'rgb(217,95,14)', 'rgb(153,52,4)'];
+
+    } else {
+        // http://soliton.vm.bytemark.co.uk/pub/cpt-city/cb/seq/tn/Greys_05.png.index.html
+        return ['rgb(247,247,247)', 'rgb(204,204,204)', 'rgb(150,150,150)',
+                'rgb(99,99,99)', 'rgb(37,37,37)'];
+    }
+}
+
+/**
+ * Get a style function usable with a GeoJSON layer.
+ *
+ * tracts is a list of Tract objects.
+ * data_point is a reference to an estimate in each tract's data.
+ * colors is a color set usable by get_color_list().
+ */
+function get_style_function(tracts, data_point, colors)
+{
+    var value, data = {}, histogram = [],
+        color_list = get_color_list(colors);
     
     for(var i = 0; i < tracts.length; i++)
     {
-        value = tracts[i].data[data_point].estimate;
+        if(data_point == RESPONSES) {
+            value = tracts[i].responses;
+        
+        } else {
+            value = tracts[i].data[data_point].estimate;
+        }
+
         data[tracts[i].geoid] = value;
         histogram.push(value);
     }
@@ -381,22 +436,22 @@ function get_style_function(tracts, data_point)
     
     return function(feature)
     {
-        var value = data[feature.id];
+        var color, value = data[feature.id];
         
         if(value < histogram[Math.floor(histogram.length * 1/5)] || isNaN(value)) {
-            var color = "rgb(237,248,233)";
+            color = color_list[0];
     
         } else if(value < histogram[Math.floor(histogram.length * 2/5)]) {
-            var color = "rgb(186,228,179)";
+            color = color_list[1];
     
         } else if(value < histogram[Math.floor(histogram.length * 3/5)]) {
-            var color = "rgb(116,196,118)";
+            color = color_list[2];
     
         } else if(value < histogram[Math.floor(histogram.length * 4/5)]) {
-            var color = "rgb(49,163,84)";
+            color = color_list[3];
     
         } else {
-            var color = "rgb(0,109,44)";
+            color = color_list[4];
         }
 
         return {
@@ -412,9 +467,11 @@ function get_style_function(tracts, data_point)
 }
 
 /**
- *
+ * Tract demographics selector control.
+ * 
+ * Initialize with map data layer and list of tracts.
  */
-var ButtonsControl = L.Control.extend({
+var DemographicsControl = L.Control.extend({
     
     options: {position: 'topright'},
     
@@ -430,21 +487,27 @@ var ButtonsControl = L.Control.extend({
         var buttons = this;
         var div = document.createElement('div');
         
-        var button1 = document.createElement('button');
-        button1.innerText = 'Hispanic';
-        button1.onclick = function() { buttons.showLayer('hispanic density') };
-        div.appendChild(button1);
+        function add_button(label, data_point, colors)
+        {
+            var button = document.createElement('button');
+            button.onclick = function() { buttons.showLayer(data_point, colors) };
+            button.innerText = label;
         
-        var button2 = document.createElement('button');
-        button2.innerText = 'Asian';
-        button2.onclick = function() { buttons.showLayer('asian density') };
-        div.appendChild(button2);
+            div.appendChild(button);
+            div.appendChild(document.createTextNode(' '));
+        }
         
-        this.showLayer('hispanic density');
+        add_button('Hispanic', 'hispanic density', BLUES);
+        add_button('White', 'white density', BLUES);
+        add_button('Black', 'black density', BLUES);
+        add_button('Asian', 'asian density', BLUES);
+        add_button('Household Income', 'B19013001', ORANGES);
+
+        this.showLayer('hispanic density', BLUES);
         return div;
     },
     
-    showLayer: function(layer_name)
+    showLayer: function(layer_name, colors)
     {
         var geojson = {features: [], type: 'GeometryCollection'};
     
@@ -453,7 +516,7 @@ var ButtonsControl = L.Control.extend({
             geojson.features.push(this.tracts[i].feature);
         }
     
-        var style_function = get_style_function(this.tracts, layer_name);
+        var style_function = get_style_function(this.tracts, layer_name, colors);
     
         this.datalayer.clearLayers();
         this.datalayer.addData(geojson);

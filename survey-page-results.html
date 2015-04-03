@@ -60,7 +60,7 @@
 	    {
 	        stuff.tracts = tracts;
 	        
-	        var buttons = new ButtonsControl(stuff.maps.recommendation.data, tracts);
+	        var buttons = new DemographicsControl(stuff.maps.recommendation.data, tracts);
 	        stuff.maps.recommendation.map.addControl(buttons);
 	    
             function onerror(reason, ttop)
@@ -165,6 +165,23 @@
 	        }
 
             update_status('Found ' + tracts.length + ' tracts in ' + stuff.city.name + ' and a spreadsheet with ' + stuff.responses.length + ' responses.');
+            render_survey_map();
+        }
+        
+        function render_survey_map()
+        {
+            var geojson = {features: [], type: 'GeometryCollection'};
+    
+            for(var i = 0; i < stuff.tracts.length; i++)
+            {
+                geojson.features.push(stuff.tracts[i].feature);
+            }
+    
+            var style_function = get_style_function(stuff.tracts, RESPONSES, GREENS);
+    
+            stuff.maps.survey.data.clearLayers();
+            stuff.maps.survey.data.addData(geojson);
+            stuff.maps.survey.data.setStyle(style_function);
         }
 
 	</script>
