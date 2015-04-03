@@ -222,20 +222,6 @@ function load_tract_data(original_tracts, onloaded_all_data)
                 'population density':
                     { estimate: datum['B01003'].estimate['B01003001'] / sq_km,
                          error: datum['B01003'].error['B01003001'] / sq_km },
-
-                'hispanic percentage':
-                    { estimate: datum['B03002'].estimate['B03002012'] / datum['B01003'].estimate['B01003001'],
-                         error: datum['B03002'].error['B03002012'] / datum['B01003'].error['B01003001'] },
-                'white percentage':
-                    { estimate: datum['B03002'].estimate['B03002003'] / datum['B01003'].estimate['B01003001'],
-                         error: datum['B03002'].error['B03002003'] / datum['B01003'].error['B01003001'] },
-                'black percentage':
-                    { estimate: datum['B03002'].estimate['B03002004'] / datum['B01003'].estimate['B01003001'],
-                         error: datum['B03002'].error['B03002004'] / datum['B01003'].error['B01003001'] },
-                'asian percentage':
-                    { estimate: datum['B03002'].estimate['B03002006'] / datum['B01003'].estimate['B01003001'],
-                         error: datum['B03002'].error['B03002006'] / datum['B01003'].error['B01003001'] },
-
                 'hispanic density':
                     { estimate: datum['B03002'].estimate['B03002012'] / sq_km,
                          error: datum['B03002'].error['B03002012'] / sq_km },
@@ -247,7 +233,24 @@ function load_tract_data(original_tracts, onloaded_all_data)
                          error: datum['B03002'].error['B03002004'] / sq_km },
                 'asian density':
                     { estimate: datum['B03002'].estimate['B03002006'] / sq_km,
-                         error: datum['B03002'].error['B03002006'] / sq_km }
+                         error: datum['B03002'].error['B03002006'] / sq_km },
+
+                // percentages
+                'rental percentage':
+                    { estimate: 100 * (datum['B25003'].estimate['B25003001'] - datum['B25003'].estimate['B25003002']) / datum['B25003'].estimate['B25003001'],
+                         error: undefined },
+                'hispanic percentage':
+                    { estimate: 100 * datum['B03002'].estimate['B03002012'] / datum['B01003'].estimate['B01003001'],
+                         error: undefined },
+                'white percentage':
+                    { estimate: 100 * datum['B03002'].estimate['B03002003'] / datum['B01003'].estimate['B01003001'],
+                         error: undefined },
+                'black percentage':
+                    { estimate: 100 * datum['B03002'].estimate['B03002004'] / datum['B01003'].estimate['B01003001'],
+                         error: undefined },
+                'asian percentage':
+                    { estimate: 100 * datum['B03002'].estimate['B03002006'] / datum['B01003'].estimate['B01003001'],
+                         error: undefined }
                 };
             
             output_tracts.push(tract);
@@ -510,6 +513,7 @@ var DemographicsControl = L.Control.extend({
         add_button('Black', 'black percentage', BLUES);
         add_button('Asian', 'asian percentage', BLUES);
         add_button('Per Capita Income', 'B19301001', ORANGES);
+        add_button('Renters', 'rental percentage', ORANGES);
 
         this.showLayer('hispanic percentage', BLUES);
         return div;
