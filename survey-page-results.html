@@ -23,6 +23,7 @@
 	<script>
 	
         var stuff = {
+            spreadsheet_url: null,
             responses: null, tracts: null,
             city: {name: null, geoid: null},
             maps: {
@@ -72,9 +73,10 @@
             load_spreadsheet(get_query_variable('gdoc'), 'Survey Results All', loaded_spreadsheet, onerror);
 	    }
 
-        function loaded_spreadsheet(all_responses)
+        function loaded_spreadsheet(all_responses, spreadsheet_url)
         {
             stuff.responses = all_responses;
+            stuff.spreadsheet_url = spreadsheet_url;
             
             var geo_responses = [],
                 languages = {
@@ -136,7 +138,7 @@
                 document.getElementById(id).innerText = access[id];
             }
         
-            update_status('Found ' + stuff.tracts.length + ' tracts in ' + stuff.city.name + ' and a spreadsheet with ' + geo_responses.length + ' geographic responses.');
+            update_status('Found ' + stuff.tracts.length + ' tracts in ' + stuff.city.name + ' and <a target="_blank" href="' + spreadsheet_url + '">a spreadsheet with ' + geo_responses.length + ' geographic responses</a>.');
             correlate_geographies(geo_responses, stuff.tracts, correlated_spreadsheet);
         }
         
@@ -164,7 +166,7 @@
 	            document.getElementById('regressions').appendChild(li);
 	        }
 
-            update_status('Found ' + tracts.length + ' tracts in ' + stuff.city.name + ' and a spreadsheet with ' + stuff.responses.length + ' responses.');
+            update_status('Found ' + tracts.length + ' tracts in ' + stuff.city.name + ' and <a target="_blank" href="'+stuff.spreadsheet_url+'">a spreadsheet with ' + stuff.responses.length + ' responses</a>.');
             render_survey_map();
         }
         

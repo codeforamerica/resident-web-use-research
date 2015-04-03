@@ -2,7 +2,7 @@ var RESPONSES = 'Survey responses',
     GREENS = 'Greens_05', BLUES = 'Blues_05', ORANGES = 'YlOrBr_05',
     GEO_COLUMN = 'Geographic Area',
     CR_API_BASE = 'http://api.censusreporter.org/1.0',
-    CR_API_PAGE = 25;
+    CR_API_PAGE = 60;
 
 /**
  * Container class for census tract objects.
@@ -96,8 +96,8 @@ function load_spreadsheet(gdoc_url, sheet_name, onsuccess, onerror)
         } catch(error) {
             return onerror('Caught error: ' + error.message);
         }
-    
-        onsuccess(responses);
+        
+        onsuccess(responses, 'https://docs.google.com/spreadsheets/d/'+ttop.key+'/pubhtml');
     }
 }
 
@@ -606,5 +606,5 @@ function build_map(element_id, geojson)
 
 function update_status(message)
 {
-    document.getElementById('status').innerText = message;
+    document.getElementById('status').innerHTML = message;
 }
