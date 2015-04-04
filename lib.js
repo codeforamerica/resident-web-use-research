@@ -507,7 +507,7 @@ var DemographicsControl = L.Control.extend({
 		buttons.showLayer(data_point, colors);
 	    };
             button.innerText = label;
-	    button.className = 'button button-' + stripClassNameForColors(colors);
+	    button.className = 'button ' + buttonClassNameForColor(colors);
         
             div.appendChild(button);
             div.appendChild(document.createTextNode(' '));
@@ -618,6 +618,6 @@ function update_status(message)
 {
     document.getElementById('status').innerHTML = message;
 }
-function stripClassNameForColors(colorString) {
-    return colors.toLowerCase().split("_")[0]
+function buttonClassNameForColor(colorString) {
+    return "button-"colors.toLowerCase().split("_")[0]
 }
