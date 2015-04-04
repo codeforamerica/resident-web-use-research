@@ -600,12 +600,19 @@ function build_map(element_id, geojson)
     
     function onEachFeature(feature, layer)
     {
-        layer.bindPopup('<a target="_blank" href="http://censusreporter.org/profiles/'+feature.properties.geoid+'">'+feature.properties.geoid+'</a>');
+        layer.bindPopup(popupHtmlForFeature(feature));
     }
     
     var datalayer = L.geoJson(geojson, {style: choropleth_style_null, onEachFeature: onEachFeature}).addTo(map);
     
     return {data: datalayer, map: map};
+}
+function popupHtmlForFeature(feature) {
+
+    headline = '<h3>'+feature.properties.name+'</h3>';
+    population = '<h4>'+feature.properties['2013_population_estimate']+' <span>Population</span></h4>';
+    dataLink = 'Details: <a target="_blank" href="http://censusreporter.org/profiles/'+feature.properties.geoid+'">'+feature.properties.geoid+'</a>';
+    return(headline+population+dataLink);
 }
 
 function update_status(message)
