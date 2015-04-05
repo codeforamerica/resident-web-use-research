@@ -31,10 +31,23 @@ describe("Tract", function(){
   describe("getFeatureIntersectionPopulation", function(){
     it("returns the population for the intersection of tract and feature", function(){
       intersection = sandbox.stub();
-      mock = sandbox.mock(tract);
-      mock.expects("getIntersectionWithFeature").withArgs(feature).returns(intersection);
-      mock.expects("getIntersectionPopulation").withArgs(intersection).returns(1000)
+      sandbox.stub(tract,"getIntersectionWithFeature").returns(intersection)
+      sandbox.stub(tract,"getIntersectionPopulation").returns(1000)
       expect(tract.getFeatureIntersectionPopulation(feature)).to.eq(1000)
     });
+    it("",function() {
+      mock = sandbox.mock(tract);
+      sandbox.stub(tract,"getIntersectionWithFeature").returns(intersection)
+      mock.expects("getIntersectionPopulation").withArgs(intersection).returns(1000)
+      tract.getFeatureIntersectionPopulation(feature)
+      mock.verify();
+    })
+    it("",function() {
+      mock = sandbox.mock(tract);
+      mock.expects("getIntersectionWithFeature").withArgs(feature).returns(intersection);
+      sandbox.stub(tract,"getIntersectionPopulation").returns(1000)
+      tract.getFeatureIntersectionPopulation(feature)
+      mock.verify();
+    })
   });
 });
