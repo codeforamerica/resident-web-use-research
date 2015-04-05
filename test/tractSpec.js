@@ -41,13 +41,19 @@ describe("Tract", function(){
       mock.expects("getIntersectionPopulation").withArgs(intersection).returns(1000)
       tract.getFeatureIntersectionPopulation(feature)
       mock.verify();
-    })
+    });
     it("",function() {
       mock = sandbox.mock(tract);
       mock.expects("getIntersectionWithFeature").withArgs(feature).returns(intersection);
       sandbox.stub(tract,"getIntersectionPopulation").returns(1000)
       tract.getFeatureIntersectionPopulation(feature)
       mock.verify();
-    })
+    });
+    context("no intersection", function() {
+      it("returns false", function() {
+        sandbox.stub(tract,"getIntersectionWithFeature").returns(undefined)
+        expect(tract.getFeatureIntersectionPopulation(feature)).to.eq(false)
+      });
+    });
   });
 });

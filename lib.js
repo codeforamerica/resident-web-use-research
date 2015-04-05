@@ -24,7 +24,7 @@ function Tract(geoid, feature)
       return turf.intersect(this.feature, feature);
     }
     this.getIntersectionPopulation = function(intersection) {
-      return(this._intersectionShare(intersection) * this.getEstimate())
+      return(intersection ? this._intersectionShare(intersection) * this.getEstimate() : false)
     }
     this.getEstimate = function() {
       return this.getPopulation().estimate;
