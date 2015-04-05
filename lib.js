@@ -17,6 +17,18 @@ function Tract(geoid, feature)
     this.feature = feature;
     this.responses = 0.0;
     this.data = null;
+    this.getIntersectionPopulation = function(intersection) {
+      return(this._intersectionShare(intersection) * this.getEstimate())
+    }
+    this.getEstimate = function() {
+      return this.getPopulation().estimate;
+    }
+    this.getPopulation = function() {
+      return this.data['B01003001'];
+    }
+    this._intersectionShare = function(intersection) {
+      return(turf.area(intersection) / turf.area(this.feature))
+    }
 }
 
 /**
@@ -259,7 +271,6 @@ function load_tract_data(original_tracts, onloaded_all_data)
         load_more_data();
     }
 }
-
 /**
  * Correlate geographic overage of neighborhoods with Census tracts.
  *
@@ -291,9 +302,8 @@ function correlate_geographies(responses, tracts, oncorrelated)
             
             if(intersection)
             {
-                var tract_share = turf.area(intersection) / turf.area(tract.feature),
-                    intersection_pop = tract_share * tract.data['B01003001'].estimate;
-                
+                intersection_pop = tract.getIntersectionPopulation(intersection
+                                                                  );
                 population_estimate += intersection_pop;
                 intersection_pops[tract.geoid] = intersection_pop;
             
