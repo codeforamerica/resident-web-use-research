@@ -21,4 +21,20 @@ describe("Tract", function(){
       expect(tract.getEstimate()).to.eq(1000)
     });
   });
+  describe("#getIntersectionWithFeature", function(){
+    it("returns turf intersection", function(){
+      intersection = {}
+      sandbox.stub(turf, "intersect").returns(intersection)
+      expect(tract.getIntersectionWithFeature(feature)).to.eq(intersection);
+    });
+  });
+  describe("getFeatureIntersectionPopulation", function(){
+    it("returns the population for the intersection of tract and feature", function(){
+      intersection = sandbox.stub();
+      mock = sandbox.mock(tract);
+      mock.expects("getIntersectionWithFeature").withArgs(feature).returns(intersection);
+      mock.expects("getIntersectionPopulation").withArgs(intersection).returns(1000)
+      expect(tract.getFeatureIntersectionPopulation(feature)).to.eq(1000)
+    });
+  });
 });

@@ -17,6 +17,12 @@ function Tract(geoid, feature)
     this.feature = feature;
     this.responses = 0.0;
     this.data = null;
+    this.getFeatureIntersectionPopulation = function(feature) {
+      return this.getIntersectionPopulation(this.getIntersectionWithFeature(feature))
+    }
+    this.getIntersectionWithFeature = function(feature) {
+      return turf.intersect(this.feature, feature);
+    }
     this.getIntersectionPopulation = function(intersection) {
       return(this._intersectionShare(intersection) * this.getEstimate())
     }
