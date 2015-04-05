@@ -304,12 +304,10 @@ function correlate_geographies(responses, tracts, oncorrelated)
         for(var j = 0; j < tracts.length; j++)
         {
             var tract = tracts[j],
-                intersection = turf.intersect(tract.feature, response.feature);
+                intersection_pop = tract.getFeatureIntersectionPopulation(response.feature);
             
-            if(intersection)
+            if(intersection_pop)
             {
-                intersection_pop = tract.getIntersectionPopulation(intersection
-                                                                  );
                 population_estimate += intersection_pop;
                 intersection_pops[tract.geoid] = intersection_pop;
             
