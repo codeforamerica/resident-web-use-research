@@ -277,6 +277,20 @@ function load_tract_data(original_tracts, onloaded_all_data)
         load_more_data();
     }
 }
+function with_no_population(object_to_filter) {
+    return object_to_filter.population !== false;
+}
+function exclude_not_intersecting_tracts(intersecting_populations) {
+  return _.filter(intersecting_populations, with_no_population);
+}
+function population_for_response_in_tract(tract,response) {
+  return { population: tract.getFeatureIntersectionPopulation(response.feature), geoid: tract.geoid };
+}
+function intersection_population(tracts, response) {
+  return exclude_not_intersecting_tracts(_.map(tracts, function(tract){
+    return population_for_response_in_tract(tract, response);
+  }));
+}
 /**
  * Correlate geographic overage of neighborhoods with Census tracts.
  *
