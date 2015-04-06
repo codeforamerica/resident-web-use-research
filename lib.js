@@ -321,20 +321,10 @@ function correlate_geographies(responses, tracts, oncorrelated)
     console.log('One tract:', tracts[0]);
 
     _.each(responses, function(response){
-      intersection_pops = _.map(tracts, function(tract){
-        return { population: tract.getFeatureIntersectionPopulation(response.feature), geoid: tract.geoid };
-      });
-      intersection_pops = _.filter(intersection_pops, function(intersection_pop) {
-        return intersection_pop.population !== false;
-      });
-      population_estimate = _.reduce(intersection_pops, function(total, intersection_population){
-        return total + intersection_population.population;
-      },0);
+      intersection_pops = intersection_population(tracts, response);
+      population_estimate = total_intersection_population(intersection_pops);
       _.map(tracts, function(tract){
-        t = _.where(intersection_pops, {geoid: tract.geoid })
-        tract.responses = _.reduce(t,function(total, intersection_population){
-          return total + (intersection_population.population / population_estimate);
-        },tract.responses);
+        tract.responses = calculate_response_ratio(intersection_population_for_geoid(intersection_pops,tract.geoid), population_estimate, tract.responses);
         console.log('Tract', tract.geoid, '-- est.', tract.responses.toFixed(3), 'responses');
       });
       console.log('Response', response.feature.properties.ZCTA5CE10, '-- est.', population_estimate.toFixed(0), 'people');
