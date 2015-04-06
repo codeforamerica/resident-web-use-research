@@ -26,6 +26,20 @@ describe('lib', function(){
       });
     });
   });
+  describe('#sum_response_ratios', function() {
+    before(function(){
+      feature = { properties: { geoid: 1 } }
+      tract = new Tract(1,feature);
+      intersecting_population = { population: 1, geoid: 1 };
+      intersecting_population_2 = { population: 1 , geoid: 1};
+      intersection_populations = [intersecting_population, intersecting_population_2];
+      population_estimate = 100
+    });
+    it('sums the response for the tract', function() {
+      tract = sum_response_ratios(tract,intersection_populations,population_estimate)
+      expect(tract.responses).to.eq(0.02)
+    });
+  });
   describe('#intersection_population', function(){
     beforeEach(function(){
       feature = { properties: { geoid: 1 } }

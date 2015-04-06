@@ -304,6 +304,11 @@ function calculate_response_ratio(intersection_populations, population_estimate,
     return total + (intersection_population.population / population_estimate);
   },current_ratio);
 }
+function sum_response_ratios(tract, intersection_populations,population_estimate) {
+  tract.responses = calculate_response_ratio(intersection_population_for_geoid(intersection_populations,tract.geoid), population_estimate, tract.responses);
+  console.log('Tract', tract.geoid, '-- est.', tract.responses.toFixed(3), 'responses');
+  return tract;
+}
 /**
  * Correlate geographic overage of neighborhoods with Census tracts.
  *
@@ -323,10 +328,7 @@ function correlate_geographies(responses, tracts, oncorrelated)
     _.each(responses, function(response){
       intersection_pops = intersection_population(tracts, response);
       population_estimate = total_intersection_population(intersection_pops);
-      _.map(tracts, function(tract){
-        tract.responses = calculate_response_ratio(intersection_population_for_geoid(intersection_pops,tract.geoid), population_estimate, tract.responses);
-        console.log('Tract', tract.geoid, '-- est.', tract.responses.toFixed(3), 'responses');
-      });
+      _.map(tracts, sum_response_ratios)
       console.log('Response', response.feature.properties.ZCTA5CE10, '-- est.', population_estimate.toFixed(0), 'people');
     });
     oncorrelated(tracts);
