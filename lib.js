@@ -328,7 +328,9 @@ function correlate_geographies(responses, tracts, oncorrelated)
     _.each(responses, function(response){
       intersection_pops = intersection_population(tracts, response);
       population_estimate = total_intersection_population(intersection_pops);
-      _.map(tracts, sum_response_ratios)
+      _.map(tracts, function(tract) {
+        sum_response_ratios(tract, intersection_pops,population_estimate);
+      });
       console.log('Response', response.feature.properties.ZCTA5CE10, '-- est.', population_estimate.toFixed(0), 'people');
     });
     oncorrelated(tracts);
