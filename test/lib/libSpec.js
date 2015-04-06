@@ -50,11 +50,26 @@ describe('lib', function(){
     });
   });
   describe('#total_intersection_population', function(){
-    it('returns the total of the populations', function() {
+    before(function() {
       intersecting_population = { population: 1 };
       intersecting_population_2 = { population: 1 };
       intersecting_populations = [intersecting_population, intersecting_population_2];
+    });
+    it('returns the total of the populations', function() {
       expect(total_intersection_population(intersecting_populations)).to.eq(2);
+    });
+  });
+  describe('#intersection_population_for_geoid', function() {
+    before(function() {
+      intersecting_population = { population: 1 , geoid: 1 };
+      intersecting_population_2 = { population: 1, geoid: 2 };
+      intersecting_populations = [intersecting_population, intersecting_population_2];
+    });
+    it('returns the intersection_population for the specified geoid', function() {
+      expect(intersection_population_for_geoid(intersecting_populations,1)).to.eql([intersecting_population])
+    });
+    it('returns not the wrong intersecting_populations', function() {
+      expect(intersection_population_for_geoid(intersecting_populations,1)).to.not.eql([intersecting_population_2])
     });
   });
 })
