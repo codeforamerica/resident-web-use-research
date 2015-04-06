@@ -140,7 +140,7 @@
             }
         
             update_status('Found ' + stuff.tracts.length + ' tracts in ' + stuff.city.name + ' and <a target="_blank" href="' + spreadsheet_url + '">a spreadsheet with ' + geo_responses.length + ' geographic responses</a>.');
-            correlate_geographies(geo_responses, stuff.tracts, correlated_spreadsheet);
+	    window.setTimeout(function() { correlate_geographies(geo_responses, stuff.tracts, correlated_spreadsheet);}, 4000);
         }
         
         function correlated_spreadsheet(tracts)
