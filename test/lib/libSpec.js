@@ -66,10 +66,26 @@ describe('lib', function(){
       intersecting_populations = [intersecting_population, intersecting_population_2];
     });
     it('returns the intersection_population for the specified geoid', function() {
-      expect(intersection_population_for_geoid(intersecting_populations,1)).to.eql([intersecting_population])
+      expect(intersection_population_for_geoid(intersecting_populations,1)).to.eql([intersecting_population]);
     });
     it('returns not the wrong intersecting_populations', function() {
-      expect(intersection_population_for_geoid(intersecting_populations,1)).to.not.eql([intersecting_population_2])
+      expect(intersection_population_for_geoid(intersecting_populations,1)).to.not.eql([intersecting_population_2]);
+    });
+  });
+  describe('#calculate_response_ratio',function() {
+    before(function() {
+      intersecting_population = { population: 1 , geoid: 1 };
+      intersecting_population_2 = { population: 1, geoid: 1 };
+      intersecting_populations = [intersecting_population, intersecting_population_2];
+      population_estimate = 100;
+      current_ratio = 0;
+    });
+    it('returns the ratio of responses per tract', function() {
+      expect(calculate_response_ratio(intersecting_populations,population_estimate,current_ratio)).to.eq(0.02)
+    });
+    it('returns the ratio of responses per tract', function() {
+      current_ratio = 0.02;
+      expect(calculate_response_ratio(intersecting_populations,population_estimate,current_ratio)).to.eq(0.04)
     });
   });
 })

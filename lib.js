@@ -299,6 +299,11 @@ function total_intersection_population(intersection_population) {
 function intersection_population_for_geoid(intersecting_populations, geoid) {
   return _.where(intersecting_populations, {geoid: geoid })
 }
+function calculate_response_ratio(intersection_populations, population_estimate, current_ratio) {
+  return _.reduce(intersection_populations, function(total, intersection_population){
+    return total + (intersection_population.population / population_estimate);
+  },current_ratio);
+}
 /**
  * Correlate geographic overage of neighborhoods with Census tracts.
  *
