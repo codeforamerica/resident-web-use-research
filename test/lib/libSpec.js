@@ -49,4 +49,12 @@ describe('lib', function(){
       expect(exclude_not_intersecting_tracts(intersecting_populations).length).to.eq(0);
     });
   });
+  describe('#total_intersection_population', function(){
+    it('returns the total of the populations', function() {
+      intersecting_population = { population: 1 };
+      intersecting_population_2 = { population: 1 };
+      intersecting_populations = [intersecting_population, intersecting_population_2];
+      expect(total_intersection_population(intersecting_populations)).to.eq(2);
+    });
+  });
 })

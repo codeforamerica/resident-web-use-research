@@ -291,6 +291,11 @@ function intersection_population(tracts, response) {
     return population_for_response_in_tract(tract, response);
   }));
 }
+function total_intersection_population(intersection_population) {
+  return _.reduce(intersection_population, function(total, intersection_population){
+    return total + intersection_population.population;
+  },0);
+}
 /**
  * Correlate geographic overage of neighborhoods with Census tracts.
  *
