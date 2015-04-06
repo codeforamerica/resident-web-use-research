@@ -10,13 +10,15 @@ module.exports = function(config) {
 
     // frameworks to use
     // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-    frameworks: ['mocha','expect', 'sinon-chai'],
+    frameworks: ['mocha', 'chai', 'sinon-chai', 'fixture'],
 
 
     // list of files / patterns to load in the browser
     files: [
       '*.js',
-      'test/**/*Spec.js'
+      'test/**/*Spec.js',
+      // fixtures
+      { pattern: 'test/mocks/**/*' }
     ],
 
 
@@ -29,6 +31,7 @@ module.exports = function(config) {
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
+      '**/*.json'   : ['html2js'],
     },
 
 
