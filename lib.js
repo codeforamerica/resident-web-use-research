@@ -292,53 +292,26 @@ function correlate_geographies(responses, tracts, oncorrelated)
     
     console.log('Tracts:', tracts.length);
     console.log('One tract:', tracts[0]);
-    
-    for(var i = 0; i < responses.length; i++)
-    {
-        var response = responses[i],
-            // Overall population estimated to lie within this response.
-            population_estimate = 0,
-            // Tract-by-tract shares of overall population.
-            intersection_pops = {};
-        
-        for(var j = 0; j < tracts.length; j++)
-        {
-            var tract = tracts[j],
-                intersection_pop = tract.getFeatureIntersectionPopulation(response.feature);
-            
-            if(intersection_pop)
-            {
-                population_estimate += intersection_pop;
-                intersection_pops[tract.geoid] = intersection_pop;
-            
-                //console.log('Tract ' + tract.feature.properties.name + ' intersects area ' + response.feature.properties.ZCTA5CE10 + ' by ' + Math.round(share * 100) + '%');
-            }
-        }
-    
-        console.log('Response', response.feature.properties.ZCTA5CE10, '-- est.', population_estimate.toFixed(0), 'people');
-        
-        for(var j = 0; j < tracts.length; j++)
-        {
-            var tract = tracts[j],
-                share = intersection_pops[tract.geoid] / population_estimate;
-            
-            if(share)
-            {
-                tract.responses += share;
-            }
-        }
-    }
-    
-    var total = 0;
-    
-    for(var i = 0; i < tracts.length; i++)
-    {
-        console.log('Tract', tracts[i].geoid, '-- est.', tracts[i].responses.toFixed(3), 'responses');
-        total += tracts[i].responses;
-    }
-    
-    console.log('Total', total.toFixed(3));
-    
+
+    _.each(responses, function(response){
+      intersection_pops = _.map(tracts, function(tract){
+        return { population: tract.getFeatureIntersectionPopulation(response.feature), geoid: tract.geoid };
+      });
+      intersection_pops = _.filter(intersection_pops, function(intersection_pop) {
+        return intersection_pop.population !== false;
+      });
+      population_estimate = _.reduce(intersection_pops, function(total, intersection_population){
+        return total + intersection_population.population;
+      },0);
+      _.map(tracts, function(tract){
+        t = _.where(intersection_pops, {geoid: tract.geoid })
+        tract.responses = _.reduce(t,function(total, intersection_population){
+          return total + (intersection_population.population / population_estimate);
+        },tract.responses);
+        console.log('Tract', tract.geoid, '-- est.', tract.responses.toFixed(3), 'responses');
+      });
+      console.log('Response', response.feature.properties.ZCTA5CE10, '-- est.', population_estimate.toFixed(0), 'people');
+    });
     oncorrelated(tracts);
 }
 
