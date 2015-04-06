@@ -18,23 +18,23 @@ function Tract(geoid, feature)
     this.responses = 0.0;
     this.data = null;
     this.getFeatureIntersectionPopulation = function(feature) {
-      return this.getIntersectionPopulation(this.getIntersectionWithFeature(feature))
-    }
+      return this.getIntersectionPopulation(this.getIntersectionWithFeature(feature));
+    };
     this.getIntersectionWithFeature = function(feature) {
       return turf.intersect(this.feature, feature);
-    }
+    };
     this.getIntersectionPopulation = function(intersection) {
-      return(intersection ? this._intersectionShare(intersection) * this.getEstimate() : false)
-    }
+      return(intersection ? this._intersectionShare(intersection) * this.getEstimate() : false);
+    };
     this.getEstimate = function() {
       return this.getPopulation().estimate;
-    }
+    };
     this.getPopulation = function() {
       return this.data['B01003001'];
-    }
+    };
     this._intersectionShare = function(intersection) {
-      return(turf.area(intersection) / turf.area(this.feature))
-    }
+      return(turf.area(intersection) / turf.area(this.feature));
+    };
 }
 
 /**
