@@ -309,6 +309,15 @@ function sum_response_ratios(tract, intersection_populations,population_estimate
   console.log('Tract', tract.geoid, '-- est.', tract.responses.toFixed(3), 'responses');
   return tract;
 }
+function accumulate_tracts(tracts, response) {
+
+  intersection_pops = intersection_population(tracts, response);
+  population_estimate = total_intersection_population(intersection_pops);
+  _.map(tracts, function(tract) {
+    sum_response_ratios(tract, intersection_pops,population_estimate);
+  });
+  console.log('Response', response.feature.properties.ZCTA5CE10, '-- est.', population_estimate.toFixed(0), 'people');
+}
 /**
  * Correlate geographic overage of neighborhoods with Census tracts.
  *
@@ -325,14 +334,18 @@ function correlate_geographies(responses, tracts, oncorrelated)
     console.log('Tracts:', tracts.length);
     console.log('One tract:', tracts[0]);
 
-    _.each(responses, function(response){
-      intersection_pops = intersection_population(tracts, response);
-      population_estimate = total_intersection_population(intersection_pops);
-      _.map(tracts, function(tract) {
-        sum_response_ratios(tract, intersection_pops,population_estimate);
-      });
-      console.log('Response', response.feature.properties.ZCTA5CE10, '-- est.', population_estimate.toFixed(0), 'people');
-    });
+    var n = 0,
+        max = responses.length;
+        batch = 100;
+
+    (function nextBatch() {
+        for (var i = 0; i < batch && n < max; ++i, ++n) {
+            accumulate_tracts(tracts, responses[n]);
+        }
+        if (n < max) {
+            setTimeout(nextBatch, 0);
+        }
+    })();
     oncorrelated(tracts);
 }
 
