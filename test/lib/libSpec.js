@@ -24,6 +24,13 @@ describe('lib', function(){
         expect(tract.responses).to.eq(0)
         correlate_geographies(responses, tracts, oncorrelate)
       });
+      it('calls accumulate_tracts once', function() {
+        atSpy = sandbox.spy(window, "accumulate_tracts");
+        correlate_geographies(responses, tracts, oncorrelate)
+        expect(atSpy.callCount).to.eq(1);
+      });
+    });
+    describe('#accumulate_tracts', function(){
     });
   });
   describe('#sum_response_ratios', function() {
