@@ -607,6 +607,9 @@ function build_map(element_id, geojson)
     }
     
     var datalayer = L.geoJson(geojson, {style: choropleth_style_null, onEachFeature: onEachFeature}).addTo(map);
+    var topPane = map._createPane('leaflet-top-pane', map.getPanes().mapPane);
+    topPane.appendChild(tileLayerLabels.getContainer());
+    tileLayerLabels.setZIndex(9);
     
     return {data: datalayer, map: map};
 }
