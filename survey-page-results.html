@@ -176,7 +176,11 @@
     
             for(var i = 0; i < stuff.tracts.length; i++)
             {
-                geojson.features.push(stuff.tracts[i].feature);
+                var tract = stuff.tracts[i];
+                var feature = tract.feature;
+                feature.properties.data = tract.data;
+                feature.properties.responses = tract.responses;
+                geojson.features.push(feature);
             }
     
             var style_function = get_style_function(stuff.tracts, RESPONSES, GREENS);

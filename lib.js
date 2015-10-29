@@ -610,11 +610,27 @@ function build_map(element_id, geojson)
 function popupHtmlForFeature(feature) {
 
     headline = '<h3>'+feature.properties.name+'</h3>';
-    population = '<h4>'+feature.properties['2013_population_estimate']+' <span>Population</span></h4>';
+    population = '<b>Population:</b> '+feature.properties['2013_population_estimate']+'<br/>';
     dataLink = 'Details: <a target="_blank" href="http://censusreporter.org/profiles/'+feature.properties.geoid+'">'+feature.properties.geoid+'</a>';
-    return(headline+population+dataLink);
+    detail = population;
+    if(feature.properties.responses) {
+      detail += '<b>Responses:</b> '+human_float(feature.properties.responses)+'<br/>';
+      detail += '<b>White Population:</b> '+Math.ceil(feature.properties.data["white percentage"].estimate)+' %<br/>';
+      detail += '<b>Black Population:</b> '+Math.ceil(feature.properties.data["black percentage"].estimate)+' %<br/>';
+      detail += '<b>Hispanic Population:</b> '+Math.ceil(feature.properties.data["hispanic percentage"].estimate)+' %<br/>';
+      detail += '<b>Asian Population:</b> '+Math.ceil(feature.properties.data["asian percentage"].estimate)+' %<br/>';
+      detail += '<b>Rental percentage:</b> '+Math.ceil(feature.properties.data["rental percentage"].estimate)+' %<br/>';
+      detail += '<b>Per capita income:</b> $'+Math.ceil(feature.properties.data["B19301001"].estimate)+'<br/>';
+    }
+    return(headline+'<p>'+detail+'</p>'+dataLink);
 }
 
+function human_float(number) {
+  if(number % 1 < 0.5) {
+    return 'less than '+Math.ceil(number);
+  }
+  return 'more than '+Math.ceil(number);
+}
 function update_status(message)
 {
     document.getElementById('status').innerHTML = message;
