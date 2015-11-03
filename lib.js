@@ -600,29 +600,41 @@ function build_map(element_id, geojson)
     
     function onEachFeature(feature, layer)
     {
-        layer.bindPopup(popupHtmlForFeature(feature));
+        detail = "";
+        templateData = {
+          tractName: feature.properties.name,
+          population: feature.properties['2013_population_estimate'],
+          geoid: feature.properties.geoid,
+        };
+        if(feature.properties.responses) {
+          templateData.responses = human_float(feature.properties.responses);
+          templateData.white =Math.ceil(feature.properties.data["white percentage"].estimate);
+          templateData.black =Math.ceil(feature.properties.data["black percentage"].estimate);
+          templateData.hispanic =Math.ceil(feature.properties.data["hispanic percentage"].estimate);
+          templateData.asian =Math.ceil(feature.properties.data["asian percentage"].estimate);
+          templateData.rental =Math.ceil(feature.properties.data["rental percentage"].estimate);
+          templateData.income =Math.ceil(feature.properties.data["B19301001"].estimate);
+          detail = L.Util.template(detailTooltipTemplate(), templateData)
+        }
+        layer.bindPopup(L.Util.template(tooltipTemplate(detail), templateData));
     }
     
     var datalayer = L.geoJson(geojson, {style: choropleth_style_null, onEachFeature: onEachFeature}).addTo(map);
     
     return {data: datalayer, map: map};
 }
-function popupHtmlForFeature(feature) {
+function tooltipTemplate(detail) {
 
-    headline = '<h3>'+feature.properties.name+'</h3>';
-    population = '<b>Population:</b> '+feature.properties['2013_population_estimate']+'<br/>';
-    dataLink = 'Details: <a target="_blank" href="http://censusreporter.org/profiles/'+feature.properties.geoid+'">'+feature.properties.geoid+'</a>';
-    detail = population;
-    if(feature.properties.responses) {
-      detail += '<b>Responses:</b> '+human_float(feature.properties.responses)+'<br/>';
-      detail += '<b>White Population:</b> '+Math.ceil(feature.properties.data["white percentage"].estimate)+' %<br/>';
-      detail += '<b>Black Population:</b> '+Math.ceil(feature.properties.data["black percentage"].estimate)+' %<br/>';
-      detail += '<b>Hispanic Population:</b> '+Math.ceil(feature.properties.data["hispanic percentage"].estimate)+' %<br/>';
-      detail += '<b>Asian Population:</b> '+Math.ceil(feature.properties.data["asian percentage"].estimate)+' %<br/>';
-      detail += '<b>Rental percentage:</b> '+Math.ceil(feature.properties.data["rental percentage"].estimate)+' %<br/>';
-      detail += '<b>Per capita income:</b> $'+Math.ceil(feature.properties.data["B19301001"].estimate)+'<br/>';
-    }
-    return(headline+'<p>'+detail+'</p>'+dataLink);
+    return '<h3>{tractName}</h3><b>Population:</b> {population}<br/>'+detail+'Details: <a target="_blank" href="http://censusreporter.org/profiles/{geoid}">{geoid}</a>';
+}
+function detailTooltipTemplate() {
+      return '<b>Responses:</b> {responses}<br/>'+
+      '<b>White Population:</b> {white} %<br/>'+
+      '<b>Black Population:</b> {black} %<br/>'+
+      '<b>Hispanic Population:</b> {hispanic} %<br/>'+
+      '<b>Asian Population:</b> {asian} %<br/>'+
+      '<b>Rental percentage:</b> {rental} %<br/>'+
+      '<b>Per capita income:</b> ${income}<br/>';
 }
 
 function human_float(number) {
