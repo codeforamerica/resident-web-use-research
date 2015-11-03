@@ -584,11 +584,12 @@ function build_map(element_id, geojson)
         options = {
             center: center, zoom: 12,
             maxBounds: maxBounds, minZoom: 9, maxZoom: 16,
-            scrollWheelZoom: false, attributionControl: false
+            scrollWheelZoom: false, attributionControl: false,
+            detectRetina: true
             };
     
     var map = new L.Map(element_id, options),
-        tile_layer = new L.TileLayer('http://{s}.tile.stamen.com/toner-lite/{z}/{x}/{y}@2x.png');
+        tile_layer = new L.TileLayer('http://{s}.tile.stamen.com/toner-lite/{z}/{x}/{y}.png');
 
     map.addLayer(tile_layer);
     
