@@ -1,0 +1,106 @@
+.clearfix:after {
+  visibility: hidden;
+  display: block;
+  font-size: 0;
+  content: " ";
+  clear: both;
+  height: 0;
+}
+* html .clearfix             { zoom: 1; } /* IE6 */
+*:first-child+html .clearfix { zoom: 1; } /* IE7 */
+
+#response-content {
+
+}
+#response-content .header {
+  border-bottom: 1px solid #DDDDDD;
+}
+#response-content .header h3 {
+  text-align: center;
+  margin: 10px 0;
+}
+
+#response-content .detail-row {
+  border-bottom: 1px solid #DDDDDD;
+  margin: 10px 0;
+  padding: 0 0 10px;
+}
+#response-content .detail-row.last{
+  border: none;
+  margin: 10px 0 0;
+  padding: 0;
+}
+#response-content .detail {
+  float: left;
+  width: 49%;
+}
+#response-content .detail i{
+  float: left;
+  color: #A0A0A0;
+  font-size: 2.9em;
+}
+#response-content .detail h4{
+  float: left;
+  font-size: 2.0em;
+  margin: 5px 0 0 10px;
+}
+#response-content .detail h4.test{
+  position: relative;
+  font-size: 2.0em;
+  padding: 0;
+  width: 100%;
+  text-align: left;
+  margin: 5px 0 0 0;
+}
+#response-content .detail h4.test i {
+  font-size: 1.2em;
+  margin-right: 15px;
+}
+#response-content .detail h4.test .high-low {
+  position: absolute;
+  top: -5px;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  font-size: 0.4em;
+  color: #777;
+}
+#response-content .detail h4 span {
+  font-size: 0.8em;
+  color: #333;
+}
+#response-content .detail h4 span.high-low {
+}
+#response-content .detail .label{
+  clear: left;
+  color: #A0A0A0;
+  font-size: 0.8em;
+  margin: 0;
+  font-weight: bold;
+}
+#response-content .detail-population-segregation {
+}
+#response-content .detail-population-segregation ul{
+  width: 100%;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+#response-content .detail-population-segregation ul li {
+  float: left;
+  width: 25%;
+}
+#response-content .detail-population-segregation ul li h4 {
+  text-align: left;
+  font-size: 1.5em;
+  margin: 0;
+}
+#response-content .detail-population-segregation ul li h4 span{
+  font-size: 0.8em;
+}
+#response-content .detail-population-segregation ul li .label{
+  font-size: 0.8em;
+  color: #A0A0A0;
+  margin: 0;
+  font-weight: bold;
+}
