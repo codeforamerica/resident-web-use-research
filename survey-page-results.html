@@ -3,7 +3,9 @@
 <head>
 	<meta charset="utf-8" />
 	<title>Resident Web Use Results</title>
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="//cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+    <link rel="stylesheet" href="main.css" />
     <style type="text/css">
         .container {
             display: flex;
@@ -225,6 +227,60 @@
 
     <script>
         try_placename()
+    </script>
+    <script id="response-popup" type="text/template">
+      <div id="response-content" class="clearfix">
+      <div class="header">
+        <h3>{tractName}</h3>
+      </div>
+      <div class="detail-row detail-housing-income clearfix">
+        <div class="detail housing clearfix">
+          <i class="fa fa-home"></i>
+          <h4>{rentalPercentage}<span>%</span></h4>
+          <p class="label">rental percentage</p>
+        </div>
+        <div class="detail income clearfix">
+          <i class="fa fa-usd"></i>
+          <h4>{income}</h4>
+          <p class="label">per capita income</p>
+        </div>
+      </div>
+      <div class="detail-row detail-population-response clearfix">
+        <div class="detail population clearfix">
+          <i class="fa fa-male"></i>
+          <h4>{population}</h4>
+          <p class="label">population</p>
+        </div>
+        <div class="detail responses clearfix">
+          <h4 class="test">
+            <i class="fa fa-envelope"></i>
+            <div class="high-low">{responsesHighLow}</div>
+            {responses}
+          </h4>
+          <p class="label">responses</p>
+        </div>
+      </div>
+      <div class="detail-row last detail-population-segregation clearfix">
+      <ul class="clearfix">
+          <li>
+            <h4>{white}<span>%</span></h4>
+            <p class="label">White</p>
+          </li>
+          <li>
+            <h4>{black}<span>%</span></h4>
+            <p class="label">Black</p>
+          </li>
+          <li>
+            <h4>{asian}<span>%</span></h4>
+            <p class="label">Asian</p>
+          </li>
+          <li>
+            <h4>{hispanic}<span>%</span></h4>
+            <p class="label">Hispanic</p>
+          </li>
+      </ul>
+      </div>
+      </div>
     </script>
 </body>
 </html>

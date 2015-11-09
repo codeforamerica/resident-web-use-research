@@ -525,7 +525,11 @@ var DemographicsControl = L.Control.extend({
     
         for(var i = 0; i < this.tracts.length; i++)
         {
-            geojson.features.push(this.tracts[i].feature);
+            var tract = stuff.tracts[i];
+            var feature = tract.feature;
+            feature.properties.data = tract.data;
+            feature.properties.responses = tract.responses;
+            geojson.features.push(feature);
         }
     
         var style_function = get_style_function(this.tracts, layer_name, colors);
@@ -600,32 +604,35 @@ function build_map(element_id, geojson)
     
     function onEachFeature(feature, layer)
     {
-        detail = "";
-        templateData = {
+        var templateData = {
           tractName: feature.properties.name,
           population: feature.properties['2013_population_estimate'],
           geoid: feature.properties.geoid,
-        };
-        if(feature.properties.responses) {
-          templateData.responses = human_float(feature.properties.responses);
-          templateData.white =Math.ceil(feature.properties.data["white percentage"].estimate);
-          templateData.black =Math.ceil(feature.properties.data["black percentage"].estimate);
-          templateData.hispanic =Math.ceil(feature.properties.data["hispanic percentage"].estimate);
-          templateData.asian =Math.ceil(feature.properties.data["asian percentage"].estimate);
-          templateData.rental =Math.ceil(feature.properties.data["rental percentage"].estimate);
-          templateData.income =Math.ceil(feature.properties.data["B19301001"].estimate);
-          detail = L.Util.template(detailTooltipTemplate(), templateData)
+          responsesHighLow: human_float(feature.properties.responses),
+          responses: Math.ceil(feature.properties.responses),
         }
-        layer.bindPopup(L.Util.template(tooltipTemplate(detail), templateData));
+        if(feature.properties.data) {
+          templateData.white = Math.ceil(feature.properties.data["white percentage"].estimate);
+          templateData.black = Math.ceil(feature.properties.data["black percentage"].estimate);
+          templateData.hispanic = Math.ceil(feature.properties.data["hispanic percentage"].estimate);
+          templateData.asian = Math.ceil(feature.properties.data["asian percentage"].estimate);
+          templateData.rentalPercentage = Math.ceil(feature.properties.data["rental percentage"].estimate);
+          templateData.income = Math.ceil(feature.properties.data["B19301001"].estimate);
+          html = document.getElementById("response-popup").innerHTML;
+          popupContent = L.Util.template(html, templateData);
+        }else {
+          popupContent = L.Util.template(tooltipTemplate(), templateData);
+        }
+        layer.bindPopup(popupContent);
     }
     
     var datalayer = L.geoJson(geojson, {style: choropleth_style_null, onEachFeature: onEachFeature}).addTo(map);
     
     return {data: datalayer, map: map};
 }
-function tooltipTemplate(detail) {
+function tooltipTemplate() {
 
-    return '<h3>{tractName}</h3><b>Population:</b> {population}<br/>'+detail+'Details: <a target="_blank" href="http://censusreporter.org/profiles/{geoid}">{geoid}</a>';
+    return '<h3>{tractName}</h3><b>Population:</b> {population}<br/>Details: <a target="_blank" href="http://censusreporter.org/profiles/{geoid}">{geoid}</a>';
 }
 function detailTooltipTemplate() {
       return '<b>Responses:</b> {responses}<br/>'+
@@ -639,9 +646,9 @@ function detailTooltipTemplate() {
 
 function human_float(number) {
   if(number % 1 < 0.5) {
-    return 'less than '+Math.ceil(number);
+    return 'less than';
   }
-  return 'more than '+Math.ceil(number);
+  return 'more than';
 }
 function update_status(message)
 {
