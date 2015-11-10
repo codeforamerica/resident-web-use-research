@@ -619,5 +619,5 @@ function update_status(message)
     document.getElementById('status').innerHTML = message;
 }
 function buttonClassNameForColor(colorString) {
-    return "button-"colors.toLowerCase().split("_")[0]
+    return "button-"+colorString.toLowerCase().split("_")[0];
 }
