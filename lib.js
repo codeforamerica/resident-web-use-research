@@ -589,9 +589,12 @@ function build_map(element_id, geojson)
     
     var map = new L.Map(element_id, options),
         layerOptions = { detectRetina: true },
-        tile_layer = new L.TileLayer('http://{s}.tile.stamen.com/toner-lite/{z}/{x}/{y}.png', layerOptions);
+        tileLayerBg = new L.TileLayer('http://{s}.tile.stamen.com/toner-background/{z}/{x}/{y}.png',layerOptions);
+        tileLayerLabels = new L.TileLayer('http://{s}.tile.stamen.com/toner-labels/{z}/{x}/{y}.png',layerOptions);
 
-    map.addLayer(tile_layer);
+    map.addLayer(tileLayerBg);
+    map.addLayer(tileLayerLabels);
+    
     
     var attr = L.control.attribution({prefix: '', position: 'bottomright'});
     attr.addAttribution('Demographic data via <a target="_blank" href="http://censusreporter.org">Census Reporter</a>');
@@ -605,6 +608,9 @@ function build_map(element_id, geojson)
     }
     
     var datalayer = L.geoJson(geojson, {style: choropleth_style_null, onEachFeature: onEachFeature}).addTo(map);
+    var topPane = map._createPane('leaflet-top-pane', map.getPanes().mapPane);
+    topPane.appendChild(tileLayerLabels.getContainer());
+    tileLayerLabels.setZIndex(9);
     
     return {data: datalayer, map: map};
 }
