@@ -584,7 +584,7 @@ function build_map(element_id, geojson)
         options = {
             center: center, zoom: 12,
             maxBounds: maxBounds, minZoom: 9, maxZoom: 16,
-            scrollWheelZoom: false, attributionControl: false,
+            scrollWheelZoom: false, attributionControl: false
             };
     
     var map = new L.Map(element_id, options),
