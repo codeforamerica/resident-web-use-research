@@ -9,6 +9,9 @@
 * html .clearfix             { zoom: 1; } /* IE6 */
 *:first-child+html .clearfix { zoom: 1; } /* IE7 */
 
+.leaflet-popup-content {
+  min-width: 250px;
+}
 #response-content {
 
 }
@@ -40,23 +43,18 @@
   font-size: 2.9em;
 }
 #response-content .detail h4{
-  float: left;
-  font-size: 2.0em;
-  margin: 5px 0 0 10px;
-}
-#response-content .detail h4.test{
   position: relative;
   font-size: 2.0em;
   padding: 0;
   width: 100%;
   text-align: left;
-  margin: 5px 0 0 0;
+  margin: 0;
 }
-#response-content .detail h4.test i {
+#response-content .detail h4 i {
   font-size: 1.2em;
   margin-right: 15px;
 }
-#response-content .detail h4.test .high-low {
+#response-content .detail h4 .high-low {
   position: absolute;
   top: -5px;
   left: 0;
@@ -65,7 +63,7 @@
   font-size: 0.4em;
   color: #777;
 }
-#response-content .detail h4 span {
+#response-content .detail h4 span.percentage {
   font-size: 0.8em;
   color: #333;
 }
