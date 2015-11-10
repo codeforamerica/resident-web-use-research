@@ -606,7 +606,7 @@ function build_map(element_id, geojson)
     {
         var templateData = {
           tractName: feature.properties.name,
-          population: feature.properties['2013_population_estimate'],
+          population: numberWithCommas(feature.properties['2013_population_estimate']),
           geoid: feature.properties.geoid,
           responsesHighLow: human_float(feature.properties.responses),
           responses: Math.ceil(feature.properties.responses),
@@ -617,7 +617,7 @@ function build_map(element_id, geojson)
           templateData.hispanic = Math.ceil(feature.properties.data["hispanic percentage"].estimate);
           templateData.asian = Math.ceil(feature.properties.data["asian percentage"].estimate);
           templateData.rentalPercentage = Math.ceil(feature.properties.data["rental percentage"].estimate);
-          templateData.income = Math.ceil(feature.properties.data["B19301001"].estimate);
+          templateData.income = numberWithCommas(Math.ceil(feature.properties.data["B19301001"].estimate));
           html = document.getElementById("response-popup").innerHTML;
           popupContent = L.Util.template(html, templateData);
         }else {
@@ -653,4 +653,16 @@ function human_float(number) {
 function update_status(message)
 {
     document.getElementById('status').innerHTML = message;
+}
+var roundNumber = function(value, decimals) {
+    var precision = (!!decimals) ? decimals : 0,
+        factor = Math.pow(10, precision),
+        value = Math.round(value * factor) / factor;
+
+    return value;
+}
+var numberWithCommas = function(n) {
+    var parts = roundNumber(n).toString().split(".");
+
+    return parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",") + (parts[1] ? "." + parts[1] : "");
 }
