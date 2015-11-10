@@ -18,6 +18,7 @@
 .button.active {
     background: #fff;
     color: #000;
+    border: 1px solid #777;
 }
 
 .button-greens {
