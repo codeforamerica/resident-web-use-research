@@ -645,6 +645,9 @@ function detailTooltipTemplate() {
 }
 
 function human_float(number) {
+  if(number === 0) {
+    return '';
+  }
   if(number % 1 < 0.5) {
     return 'less than';
   }
