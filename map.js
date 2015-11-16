@@ -8,7 +8,7 @@ function Map() {
   this.init = function(element_id, geojson) {
     this.element_id = element_id;
     this.geojson = geojson;
-    var envelope, feature;
+    var envelope, feature, popupOpened;
     for(var i = 0; i < geojson.features.length; i++)
     {
         feature = geojson.features[i];
@@ -47,9 +47,13 @@ function Map() {
     this.map.addControl(attr);
     var that = this;
     resetStyle = function(e) {
-      that.dataLayer.setStyle(that.style);
+      if(!that.popupOpened) {
+        that.dataLayer.setStyle(that.style);
+      }
+      that.popupOpened = false;
     }
     highlightFeature= function(e) {
+      that.popupOpened = true;
       that.dataLayer.setStyle(that.style);
       var layer = e.target;
 
@@ -63,6 +67,7 @@ function Map() {
       }
     }
     this.map.on('popupclose', resetStyle);
+    this.map.on('popupopen', function() { that.popupOpened = false; });
     this.dataLayer = L.geoJson(this.geojson, {style: choropleth_style_null, onEachFeature: this.onEachFeature, click: highlightFeature}).addTo(this.map);
     var topPane = this.map._createPane('leaflet-top-pane', this.map.getPanes().mapPane);
     topPane.appendChild(tileLayerLabels.getContainer());
