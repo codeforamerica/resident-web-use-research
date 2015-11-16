@@ -21,6 +21,7 @@
 	<script src="turf.min.js"></script>
 	<script src="regression.js"></script>
 	<script src="tabletop.js"></script>
+	<script src="map.js"></script>
 	<script src="lib.js"></script>
 	<script>
 	
@@ -52,8 +53,10 @@
                 geojson.features.push(tracts[i].feature);
             }
             
-            stuff.maps.survey = build_map('survey-map', geojson);
-            stuff.maps.recommendation = build_map('recommendation-map', geojson);
+            stuff.maps.survey = new Map();
+            stuff.maps.survey.init('survey-map', geojson);
+            stuff.maps.recommendation = new Map();
+            stuff.maps.recommendation.init('recommendation-map', geojson);
             
             update_status('Found ' + tracts.length + ' tracts. Loading data…');
             load_tract_data(tracts, loaded_tract_data);
@@ -63,7 +66,7 @@
 	    {
 	        stuff.tracts = tracts;
 	        
-	        var buttons = new DemographicsControl(stuff.maps.recommendation.data, tracts);
+	        var buttons = new DemographicsControl(stuff.maps.recommendation, tracts);
 	        stuff.maps.recommendation.map.addControl(buttons);
 	    
             function onerror(reason, ttop)
@@ -187,9 +190,11 @@
     
             var style_function = get_style_function(stuff.tracts, RESPONSES, GREENS);
     
-            stuff.maps.survey.data.clearLayers();
-            stuff.maps.survey.data.addData(geojson);
-            stuff.maps.survey.data.setStyle(style_function);
+            stuff.maps.survey.setData(geojson);
+            stuff.maps.survey.setStyle(style_function);
+            stuff.maps.survey.reloadStyle();
+            stuff.maps.recommendation.setData(geojson);
+            stuff.maps.recommendation.reloadStyle();
         }
 
 	</script>
