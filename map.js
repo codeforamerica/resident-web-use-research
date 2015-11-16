@@ -33,9 +33,13 @@ function Map() {
             maxBounds: maxBounds, minZoom: 9, maxZoom: 16,
             scrollWheelZoom: false, attributionControl: false
             };
-    this.map = new L.Map(element_id, options);
-    var tile_layer = new L.TileLayer('http://{s}.tile.stamen.com/toner-lite/{z}/{x}/{y}@2x.png');
-    this.map.addLayer(tile_layer);
+    this.map = new L.Map(element_id, options),
+        layerOptions = { detectRetina: true },
+        tileLayerBg = new L.TileLayer('http://{s}.tile.stamen.com/toner-background/{z}/{x}/{y}.png',layerOptions),
+        tileLayerLabels = new L.TileLayer('http://{s}.tile.stamen.com/toner-labels/{z}/{x}/{y}.png',layerOptions);
+    this.map.addLayer(tileLayerBg);
+    this.map.addLayer(tileLayerLabels);
+
     var attr = L.control.attribution({prefix: '', position: 'bottomright'});
     attr.addAttribution('Demographic data via <a target="_blank" href="http://censusreporter.org">Census Reporter</a>');
     attr.addAttribution('<a target="_blank" href="http://maps.stamen.com">Cartography</a> by <a target="_blank" href="http://stamen.com">Stamen</a>');
@@ -60,6 +64,9 @@ function Map() {
     }
     this.map.on('popupclose', resetStyle);
     this.dataLayer = L.geoJson(this.geojson, {style: choropleth_style_null, onEachFeature: this.onEachFeature, click: highlightFeature}).addTo(this.map);
+    var topPane = this.map._createPane('leaflet-top-pane', this.map.getPanes().mapPane);
+    topPane.appendChild(tileLayerLabels.getContainer());
+    tileLayerLabels.setZIndex(9);
     return this;
   };
   this.onEachFeature = function(feature, layer) {
