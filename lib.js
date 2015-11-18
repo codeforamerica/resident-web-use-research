@@ -537,6 +537,7 @@ var DemographicsControl = L.Control.extend({
         this.map.dataLayer.clearLayers();
         this.map.setData(geojson);
         this.map.setStyle(style_function);
+        this.map.reloadStyle();
     }
     
 });
