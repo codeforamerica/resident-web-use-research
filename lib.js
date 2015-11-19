@@ -334,21 +334,36 @@ function correlate_geographies(responses, tracts, oncorrelated)
     console.log('Tracts:', tracts.length);
     console.log('One tract:', tracts[0]);
 
-    var n = 0,
-        max = responses.length;
-        batch = 100;
+    var max = responses.length;
 
-    (function nextBatch() {
-        for (var i = 0; i < batch && n < max; ++i, ++n) {
-            accumulate_tracts(tracts, responses[n]);
-        }
-        if (n < max) {
-            setTimeout(nextBatch, 0);
-        }
-    })();
-    oncorrelated(tracts);
+    function work(item) {
+      accumulate_tracts(tracts, item);
+    }
+    function finish(responses) {
+      oncorrelated(tracts);
+    }
+    timedChunk(responses, work, this, finish);
 }
+//Copyright 2009 Nicholas C. Zakas. All rights reserved.
+//MIT Licensed
+function timedChunk(items, process, context, callback){
+    var todo = items.concat();   //create a clone of the original
 
+    setTimeout(function(){
+
+        var start = +new Date();
+
+        do {
+             process.call(context, todo.shift());
+        } while (todo.length > 0 && (+new Date() - start < 50));
+
+        if (todo.length > 0){
+            setTimeout(arguments.callee, 25);
+        } else {
+            callback(items);
+        }
+    }, 25);
+}
 /**
  * Calculate coefficient of determination for tract responses, return R-squared.
  *

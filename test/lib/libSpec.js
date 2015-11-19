@@ -1,9 +1,11 @@
 describe('lib', function(){
   beforeEach(function(){
     sandbox = sinon.sandbox.create();
+    this.clock = sinon.useFakeTimers();
   });
   afterEach(function(){
     sandbox.restore();
+    this.clock.restore();
   });
   context('real world fixtures', function(){
     beforeEach(function(){
@@ -18,6 +20,7 @@ describe('lib', function(){
       it('calls the callback with tracts', function(){
         oncorrelate = sandbox.spy();
         correlate_geographies(responses, tracts, oncorrelate)
+        this.clock.tick(25);
         expect(oncorrelate.calledWith(tracts)).to.eq(true);
       });
       it('appends responses to the tracts', function(){
@@ -27,6 +30,7 @@ describe('lib', function(){
       it('calls accumulate_tracts once', function() {
         atSpy = sandbox.spy(window, "accumulate_tracts");
         correlate_geographies(responses, tracts, oncorrelate)
+        this.clock.tick(25);
         expect(atSpy.callCount).to.eq(1);
       });
     });
