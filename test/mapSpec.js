@@ -30,4 +30,20 @@ describe('Map', function() {
       expect(this.map.style).to.eq('style');
     });
   });
+  describe('#reloadStyle', function() {
+    beforeEach(function() {
+      this.map.dataLayer = { setStyle: function() {} };
+    });
+    it('calls setStyle for the dataLayer with the set style', function() {
+      mock = this.sandbox.mock(this.map.dataLayer).expects('setStyle').once();
+      this.map.reloadStyle();
+      mock.verify();
+    });
+    it('calls setStyle for the dataLayer with the set style', function() {
+      mock = this.sandbox.mock(this.map.dataLayer).expects('setStyle').once().withArgs('style');
+      this.map.setStyle('style');
+      this.map.reloadStyle();
+      mock.verify();
+    });
+  });
 });
