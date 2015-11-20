@@ -31,11 +31,7 @@ function Map() {
     this.map.addLayer(tileLayerBg);
     this.map.addLayer(tileLayerLabels);
 
-    var attr = L.control.attribution({prefix: '', position: 'bottomright'});
-    attr.addAttribution('Demographic data via <a target="_blank" href="http://censusreporter.org">Census Reporter</a>');
-    attr.addAttribution('<a target="_blank" href="http://maps.stamen.com">Cartography</a> by <a target="_blank" href="http://stamen.com">Stamen</a>');
-    attr.addAttribution('Map Data <a target="_blank" href="http://www.openstreetmap.org/copyright">&copy; OSM contributors</a>');
-    this.map.addControl(attr);
+    this.map.addControl(this.attributions());
     var that = this;
     resetStyle = function(e) {
       if(!that.popupOpened) {
@@ -64,6 +60,13 @@ function Map() {
     topPane.appendChild(tileLayerLabels.getContainer());
     tileLayerLabels.setZIndex(9);
     return this;
+  };
+  this.attributions = function() {
+    var attr = L.control.attribution({prefix: '', position: 'bottomright'});
+    attr.addAttribution('Demographic data via <a target="_blank" href="http://censusreporter.org">Census Reporter</a>');
+    attr.addAttribution('<a target="_blank" href="http://maps.stamen.com">Cartography</a> by <a target="_blank" href="http://stamen.com">Stamen</a>');
+    attr.addAttribution('Map Data <a target="_blank" href="http://www.openstreetmap.org/copyright">&copy; OSM contributors</a>');
+    return attr;
   };
   this.calculateExtent = function(features) {
     var envelope, feature,
