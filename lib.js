@@ -552,7 +552,14 @@ function choropleth_style_null()
         "fillOpacity": 0.3
     };
 }
-
+/**
+ * Build TileLayer String for Stamen layers
+ *
+ * return string with stamenType and @2x if retina is true
+*/
+function stamenLayer(stamenType, retina) {
+  return 'http://{s}.tile.stamen.com/'+stamenType+'/{z}/{x}/{y}'+(retina ? '@2x': '')+'.png';
+}
 /**
  * Build a map with GeoJSON data.
  *
@@ -588,9 +595,8 @@ function build_map(element_id, geojson)
             };
     
     var map = new L.Map(element_id, options),
-        layerOptions = { detectRetina: true },
-        tileLayerBg = new L.TileLayer('http://{s}.tile.stamen.com/toner-background/{z}/{x}/{y}.png',layerOptions);
-        tileLayerLabels = new L.TileLayer('http://{s}.tile.stamen.com/toner-labels/{z}/{x}/{y}.png',layerOptions);
+        tileLayerBg = new L.TileLayer(stamenLayer('toner-background', L.Browser.retina));
+        tileLayerLabels = new L.TileLayer(stamenLayer('toner-labels', L.Browser.retina));
 
     map.addLayer(tileLayerBg);
     map.addLayer(tileLayerLabels);
