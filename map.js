@@ -82,25 +82,30 @@ function Map() {
 
     return turf.extent(turf.buffer(envelope, 6, 'kilometers'));
   },
+  this.templateData = function(properties) {
+    var templateData = {
+      tractName: properties.name,
+      population: numberWithCommas(properties['2013_population_estimate']),
+      geoid: properties.geoid,
+      responsesHighLow: human_float(properties.responses),
+      responses: Math.ceil(properties.responses)
+    }
+    if(properties.data) {
+      templateData.white = Math.ceil(properties.data["white percentage"].estimate);
+      templateData.black = Math.ceil(properties.data["black percentage"].estimate);
+      templateData.hispanic = Math.ceil(properties.data["hispanic percentage"].estimate);
+      templateData.asian = Math.ceil(properties.data["asian percentage"].estimate);
+      templateData.rentalPercentage = Math.ceil(properties.data["rental percentage"].estimate);
+      templateData.income = numberWithCommas(Math.ceil(properties.data["B19301001"].estimate));
+    }
+    return templateData;
+  };
   this.onEachFeature = function(feature, layer) {
     layer.on({
       click: this.click
     });
-    var templateData = {
-      tractName: feature.properties.name,
-      population: numberWithCommas(feature.properties['2013_population_estimate']),
-      geoid: feature.properties.geoid,
-      responsesHighLow: human_float(feature.properties.responses),
-      responses: Math.ceil(feature.properties.responses),
-    }
+    var templateData = this.templateData(feature.properties);
     if(feature.properties.data) {
-      templateData.white = Math.ceil(feature.properties.data["white percentage"].estimate);
-      templateData.black = Math.ceil(feature.properties.data["black percentage"].estimate);
-      templateData.hispanic = Math.ceil(feature.properties.data["hispanic percentage"].estimate);
-      templateData.asian = Math.ceil(feature.properties.data["asian percentage"].estimate);
-      templateData.rentalPercentage = Math.ceil(feature.properties.data["rental percentage"].estimate);
-      templateData.income = numberWithCommas(Math.ceil(feature.properties.data["B19301001"].estimate));
-
       html = document.getElementById("response-popup").innerHTML;
       popupContent = L.Util.template(html, templateData);
     }else {

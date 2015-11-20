@@ -75,4 +75,34 @@ describe('Map', function() {
       mock.verify();
     });
   });
+  describe('#templateData', function() {
+    context('has response included', function() {
+      beforeEach(function() {
+        properties = {name: 'Tract', '2013_population_estimate': 100000, geoid: 1, responses: '1.2' , data: { 'white percentage': 70, 'black percentage': 15, 'hispanic percentage': 5, 'asian percentage': 10, 'rental percentage': 60, 'B19301001': 5000000}};
+      });
+      it('has templateData fields', function() {
+        expect(this.map.templateData(properties)).to.contain.all.keys('tractName', 'population', 'geoid', 'responsesHighLow', 'responses');
+      });
+      it('has correct tract name', function() {
+        expect(this.map.templateData(properties).tractName).to.eql('Tract');
+      });
+      it('has response specific fields', function() {
+        expect(this.map.templateData(properties)).to.contain.all.keys('white', 'black', 'hispanic', 'asian', 'rentalPercentage', 'income');
+      });
+    });
+    context('has response not included', function() {
+      beforeEach(function() {
+        properties = {name: 'Tract', '2013_population_estimate': 100000, geoid: 1, responses: '1.2' };
+      });
+      it('has templateData fields', function() {
+        expect(this.map.templateData(properties)).to.contain.all.keys('tractName', 'population', 'geoid', 'responsesHighLow', 'responses');
+      });
+      it('has correct tract name', function() {
+        expect(this.map.templateData(properties).tractName).to.eql('Tract');
+      });
+      it('does not have response specific fields', function() {
+        expect(this.map.templateData(properties)).to.not.contain.all.keys('white', 'black', 'hispanic', 'asian', 'rentalPercentage', 'income');
+      });
+    });
+  });
 });
