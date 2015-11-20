@@ -8,20 +8,11 @@ function Map() {
   this.init = function(element_id, geojson) {
     this.element_id = element_id;
     this.geojson = geojson;
-    var envelope, feature, popupOpened;
-    for(var i = 0; i < geojson.features.length; i++)
-    {
-        feature = geojson.features[i];
-
-        if(envelope == undefined) {
-            envelope = turf.envelope(feature);
-
-        } else {
-            envelope = turf.envelope(turf.union(envelope, feature));
-        }
-    }
-
-    var extent = turf.extent(turf.buffer(envelope, 6, 'kilometers')),
+    this.initMap();
+  }
+  this.initMap = function() {
+    var popupOpened,
+        extent = this.calculateExtent(this.geojson.features),
         xmin = extent[0], ymin = extent[1],
         xmax = extent[2], ymax = extent[3],
         center = new L.LatLng(ymax/2 + ymin/2, xmax/2 + xmin/2),
@@ -33,7 +24,7 @@ function Map() {
             maxBounds: maxBounds, minZoom: 9, maxZoom: 16,
             scrollWheelZoom: false, attributionControl: false
             };
-    this.map = new L.Map(element_id, options),
+    this.map = new L.Map(this.element_id, options),
         layerOptions = { detectRetina: true },
         tileLayerBg = new L.TileLayer(stamenLayer('toner-background', L.Browser.retina)),
         tileLayerLabels = new L.TileLayer(stamenLayer('toner-labels', L.Browser.retina));
@@ -74,6 +65,23 @@ function Map() {
     tileLayerLabels.setZIndex(9);
     return this;
   };
+  this.calculateExtent = function(features) {
+    var envelope, feature,
+        featureLength = features.length;
+    for(var i = 0; i < featureLength; i++)
+    {
+        feature = features[i];
+
+        if(envelope == undefined) {
+            envelope = turf.envelope(feature);
+
+        } else {
+            envelope = turf.envelope(turf.union(envelope, feature));
+        }
+    }
+
+    return turf.extent(turf.buffer(envelope, 6, 'kilometers'));
+  },
   this.onEachFeature = function(feature, layer) {
     layer.on({
       click: this.click
