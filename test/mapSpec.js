@@ -24,4 +24,10 @@ describe('Map', function() {
       mock.verify();
     });
   });
+  describe('#setStyle', function() {
+    it('sets the style', function() {
+      this.map.setStyle('style');
+      expect(this.map.style).to.eq('style');
+    });
+  });
 });
