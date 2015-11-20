@@ -109,9 +109,12 @@ function Map() {
     layer.bindPopup(popupContent);
   };
   this.setData = function(data) {
-    this.dataLayer.clearLayers();
     this.geojson = data;
-    this.dataLayer.addData(data);
+    this.updateDataLayer();
+  };
+  this.updateDataLayer = function() {
+    this.dataLayer.clearLayers();
+    this.dataLayer.addData(this.geojson);
   };
   this.setStyle = function(style) {
     this.style = style;

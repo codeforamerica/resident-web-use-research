@@ -46,4 +46,33 @@ describe('Map', function() {
       mock.verify();
     });
   });
+  describe('#setData', function() {
+    it('updates the geojson', function() {
+      this.sandbox.stub(this.map, 'updateDataLayer');
+      geojson = { test: [] };
+      this.map.setData(geojson);
+      expect(this.map.geojson).to.eq(geojson);
+    });
+    it('calls update the dataLayer', function() {
+      mock = this.sandbox.mock(this.map).expects('updateDataLayer').once();
+      geojson = { test: [] };
+      this.map.setData(geojson);
+      mock.verify();
+    });
+  });
+  describe('#updateDataLayer', function() {
+    beforeEach(function() {
+      this.map.dataLayer = { clearLayers: function() {}, addData: function(data) {} };
+    });
+    it('calls clearLayers', function() {
+      mock = this.sandbox.mock(this.map.dataLayer).expects('clearLayers').once();
+      this.map.updateDataLayer();
+      mock.verify();
+    });
+    it('calls addData', function() {
+      mock = this.sandbox.mock(this.map.dataLayer).expects('addData').once();
+      this.map.updateDataLayer();
+      mock.verify();
+    });
+  });
 });
