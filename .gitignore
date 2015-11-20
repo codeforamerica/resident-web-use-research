@@ -7,3 +7,6 @@ analysis-oakland-2014-10-27/*.shp
 analysis-oakland-2014-10-27/*.shx
 analysis-oakland-2014-10-27/*.dbf
 analysis-oakland-2014-10-27/*.prj
+
+node_modules/
+coverage/

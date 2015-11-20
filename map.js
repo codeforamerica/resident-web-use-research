@@ -35,8 +35,8 @@ function Map() {
             };
     this.map = new L.Map(element_id, options),
         layerOptions = { detectRetina: true },
-        tileLayerBg = new L.TileLayer('http://{s}.tile.stamen.com/toner-background/{z}/{x}/{y}.png',layerOptions),
-        tileLayerLabels = new L.TileLayer('http://{s}.tile.stamen.com/toner-labels/{z}/{x}/{y}.png',layerOptions);
+        tileLayerBg = new L.TileLayer(stamenLayer('toner-background', L.Browser.retina)),
+        tileLayerLabels = new L.TileLayer(stamenLayer('toner-labels', L.Browser.retina));
     this.map.addLayer(tileLayerBg);
     this.map.addLayer(tileLayerLabels);
 
