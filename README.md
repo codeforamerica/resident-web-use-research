@@ -1,4 +1,4 @@
-Resident Web Use Research
+Resident Web Use Research [![Build Status](https://travis-ci.org/codeforamerica/resident-web-use-research.svg?branch=code-coverage)](https://travis-ci.org/codeforamerica/resident-web-use-research) [![Coverage Status](https://coveralls.io/repos/codeforamerica/resident-web-use-research/badge.svg?branch=master&service=github)](https://coveralls.io/github/codeforamerica/resident-web-use-research?branch=master)
 =========================
 
 This _work-in-progress_ survey tool will make it easy to run, evaluate, and course-correct resident research surveys

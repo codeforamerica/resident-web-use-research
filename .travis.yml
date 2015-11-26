@@ -1,0 +1,9 @@
+sudo: false
+language: node_js
+node_js:
+  - '4.1'
+after_success:
+  - cat ./coverage/report-lcov/lcov.info | ./node_modules/coveralls/bin/coveralls.js
+env:
+  global:
+    secure: B6kybSZ/y1KXWZYjHiiWpp8iOPgOMfI7IIvki+kYzZhVWXgtOUI+8crT+bosf4zULlOYRSyxsl+yQdUWxxsFLXmew4vLS8ADK9Y9pk+IdfPKEGbbqz2YSXt0Rq3HxKR0eYM8ysSViI0wo4E6A+uVRQ23teP0VCyT2Cbm6d/fhVw=

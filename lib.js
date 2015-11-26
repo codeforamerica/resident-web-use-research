@@ -537,8 +537,13 @@ var DemographicsControl = L.Control.extend({
         function add_button(label, data_point, colors)
         {
             var button = document.createElement('button');
-            button.onclick = function() { buttons.showLayer(data_point, colors) };
+            button.onclick = function() {
+		$(this).parent().find('button').removeClass('active');
+		$(this).addClass('active');
+		buttons.showLayer(data_point, colors);
+	    };
             button.innerText = label;
+	    button.className = 'button ' + buttonClassNameForColor(colors);
         
             div.appendChild(button);
             div.appendChild(document.createTextNode(' '));
@@ -552,6 +557,7 @@ var DemographicsControl = L.Control.extend({
         add_button('Renters', 'rental percentage', ORANGES);
 
         this.showLayer('hispanic percentage', BLUES);
+        $(div).find('button:first').addClass('active');
         return div;
     },
     
@@ -588,7 +594,14 @@ function choropleth_style_null()
         "fillOpacity": 0.3
     };
 }
-
+/**
+ * Build TileLayer String for Stamen layers
+ *
+ * return string with stamenType and @2x if retina is true
+*/
+function stamenLayer(stamenType, retina) {
+  return 'http://{s}.tile.stamen.com/'+stamenType+'/{z}/{x}/{y}'+(retina ? '@2x': '')+'.png';
+}
 /**
  * Build a map with GeoJSON data.
  *
@@ -624,9 +637,12 @@ function build_map(element_id, geojson)
             };
     
     var map = new L.Map(element_id, options),
-        tile_layer = new L.TileLayer('http://{s}.tile.stamen.com/toner-lite/{z}/{x}/{y}@2x.png');
+        tileLayerBg = new L.TileLayer(stamenLayer('toner-background', L.Browser.retina));
+        tileLayerLabels = new L.TileLayer(stamenLayer('toner-labels', L.Browser.retina));
 
-    map.addLayer(tile_layer);
+    map.addLayer(tileLayerBg);
+    map.addLayer(tileLayerLabels);
+    
     
     var attr = L.control.attribution({prefix: '', position: 'bottomright'});
     attr.addAttribution('Demographic data via <a target="_blank" href="http://censusreporter.org">Census Reporter</a>');
@@ -640,6 +656,9 @@ function build_map(element_id, geojson)
     }
     
     var datalayer = L.geoJson(geojson, {style: choropleth_style_null, onEachFeature: onEachFeature}).addTo(map);
+    var topPane = map._createPane('leaflet-top-pane', map.getPanes().mapPane);
+    topPane.appendChild(tileLayerLabels.getContainer());
+    tileLayerLabels.setZIndex(9);
     
     return {data: datalayer, map: map};
 }
@@ -647,4 +666,7 @@ function build_map(element_id, geojson)
 function update_status(message)
 {
     document.getElementById('status').innerHTML = message;
+}
+function buttonClassNameForColor(colorString) {
+    return "button-"+colorString.toLowerCase().split("_")[0];
 }
