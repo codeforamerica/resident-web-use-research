@@ -14,6 +14,13 @@ describe("Tract", function(){
       expect(tract.getIntersectionPopulation({})).to.eq(1000);
     });
   });
+  describe("getPopulation",function(){
+    it("returns the data B01003001",function(){
+      data = { 'B01003001': 1000 };
+      tract.data = data;
+      expect(tract.getPopulation()).to.eq(1000)
+    });
+  });
   describe("getEstimate",function(){
     it("returns the estimate of data B01003001",function(){
       data = { estimate: 1000 };
