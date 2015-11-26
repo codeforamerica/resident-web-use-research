@@ -7,6 +7,11 @@ describe('lib', function(){
     sandbox.restore();
     this.clock.restore();
   });
+  describe('#initial values', function() {
+    it('CR_API_BASE is censusreporter', function() {
+      expect(window.CR_API_BASE).to.eq('http://api.censusreporter.org/1.0');
+    });
+  });
   context('real world fixtures', function(){
     beforeEach(function(){
       fixture.setBase('test/mocks')
