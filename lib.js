@@ -4,6 +4,53 @@ var RESPONSES = 'Survey responses',
     CR_API_BASE = 'http://api.censusreporter.org/1.0',
     CR_API_PAGE = 60;
 
+ResidentResearch = window.ResidentResearch || {};
+
+ResidentResearch.correlation = function() {
+
+  with_no_population = function(object_to_filter) {
+      return object_to_filter.population !== false;
+  }
+  exclude_not_intersecting_tracts = function(intersecting_populations) {
+    return _.filter(intersecting_populations, with_no_population);
+  }
+  population_for_response_in_tract = function(tract,response) {
+    return { population: tract.getFeatureIntersectionPopulation(response.feature), geoid: tract.geoid };
+  }
+  intersection_population = function(tracts, response) {
+    return exclude_not_intersecting_tracts(_.map(tracts, function(tract){
+      return population_for_response_in_tract(tract, response);
+    }));
+  }
+  total_intersection_population = function(intersection_population) {
+    return _.reduce(intersection_population, function(total, intersection_population){
+      return total + intersection_population.population;
+    },0);
+  }
+  intersection_population_for_geoid = function(intersecting_populations, geoid) {
+    return _.where(intersecting_populations, {geoid: geoid })
+  }
+  calculate_response_ratio = function(intersection_populations, population_estimate, current_ratio) {
+    return _.reduce(intersection_populations, function(total, intersection_population){
+      return total + (intersection_population.population / population_estimate);
+    },current_ratio);
+  }
+  sum_response_ratios = function(tract, intersection_populations,population_estimate) {
+    tract.responses = calculate_response_ratio(intersection_population_for_geoid(intersection_populations,tract.geoid), population_estimate, tract.responses);
+    console.log('Tract', tract.geoid, '-- est.', tract.responses.toFixed(3), 'responses');
+    return tract;
+  }
+  return {
+    accumulate_tracts: function (tracts, response) {
+      intersection_pops = intersection_population(tracts, response);
+      population_estimate = total_intersection_population(intersection_pops);
+      _.map(tracts, function(tract) {
+        sum_response_ratios(tract, intersection_pops,population_estimate);
+      });
+      console.log('Response', response.feature.properties.ZCTA5CE10, '-- est.', population_estimate.toFixed(0), 'people');
+    }
+  }
+}
 /**
  * Container class for census tract objects.
  *
@@ -277,47 +324,6 @@ function load_tract_data(original_tracts, onloaded_all_data)
         load_more_data();
     }
 }
-function with_no_population(object_to_filter) {
-    return object_to_filter.population !== false;
-}
-function exclude_not_intersecting_tracts(intersecting_populations) {
-  return _.filter(intersecting_populations, with_no_population);
-}
-function population_for_response_in_tract(tract,response) {
-  return { population: tract.getFeatureIntersectionPopulation(response.feature), geoid: tract.geoid };
-}
-function intersection_population(tracts, response) {
-  return exclude_not_intersecting_tracts(_.map(tracts, function(tract){
-    return population_for_response_in_tract(tract, response);
-  }));
-}
-function total_intersection_population(intersection_population) {
-  return _.reduce(intersection_population, function(total, intersection_population){
-    return total + intersection_population.population;
-  },0);
-}
-function intersection_population_for_geoid(intersecting_populations, geoid) {
-  return _.where(intersecting_populations, {geoid: geoid })
-}
-function calculate_response_ratio(intersection_populations, population_estimate, current_ratio) {
-  return _.reduce(intersection_populations, function(total, intersection_population){
-    return total + (intersection_population.population / population_estimate);
-  },current_ratio);
-}
-function sum_response_ratios(tract, intersection_populations,population_estimate) {
-  tract.responses = calculate_response_ratio(intersection_population_for_geoid(intersection_populations,tract.geoid), population_estimate, tract.responses);
-  console.log('Tract', tract.geoid, '-- est.', tract.responses.toFixed(3), 'responses');
-  return tract;
-}
-function accumulate_tracts(tracts, response) {
-
-  intersection_pops = intersection_population(tracts, response);
-  population_estimate = total_intersection_population(intersection_pops);
-  _.map(tracts, function(tract) {
-    sum_response_ratios(tract, intersection_pops,population_estimate);
-  });
-  console.log('Response', response.feature.properties.ZCTA5CE10, '-- est.', population_estimate.toFixed(0), 'people');
-}
 /**
  * Correlate geographic overage of neighborhoods with Census tracts.
  *
@@ -330,14 +336,13 @@ function correlate_geographies(responses, tracts, oncorrelated)
 {
     console.log('Responses:', responses.length);
     console.log('One response:', responses[0]);
-    
+
     console.log('Tracts:', tracts.length);
     console.log('One tract:', tracts[0]);
 
-    var max = responses.length;
-
     function work(item) {
-      accumulate_tracts(tracts, item);
+      correlate = ResidentResearch.correlation();
+      correlate.accumulate_tracts(tracts, item);
     }
     function finish(responses) {
       oncorrelated(tracts);
