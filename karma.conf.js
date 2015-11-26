@@ -6,7 +6,8 @@ module.exports = function(config) {
     files: [
       'node_modules/leaflet/dist/leaflet.js',
       '*.js',
-      'test/**/*Spec.js'
+      'test/**/*Spec.js',
+      { pattern: 'test/mocks/**/*' }
     ],
     exclude: [
       '**/*.swp'
