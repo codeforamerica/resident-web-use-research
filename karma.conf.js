@@ -5,6 +5,8 @@ module.exports = function(config) {
     frameworks: ['mocha', 'chai', 'sinon-chai', 'fixture'],
     files: [
       'node_modules/leaflet/dist/leaflet.js',
+      'node_modules/underscore/underscore.js',
+      'node_modules/jquery/dist/jquery.js',
       '*.js',
       'test/**/*Spec.js'
     ],
@@ -12,8 +14,8 @@ module.exports = function(config) {
       '**/*.swp'
     ],
     preprocessors: {
-      '**/*.json'   : ['html2js'],
-      'lib.js': 'coverage'
+      'lib.js': 'coverage',
+      'census-reporter.js': 'coverage'
     },
     reporters: ['progress','coverage'],
     coverageReporter: {
