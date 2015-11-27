@@ -1,0 +1,15 @@
+engines:
+  eslint:
+    enabled: true
+  csslint:
+    enabled: true
+ratings:
+   paths:
+   - "**.js"
+   - "**.css"
+exclude_paths:
+- "test/**/*"
+- "turf.min.js"
+- "regression.js"
+- "tabletop.js"
+- "karma.conf.js"
