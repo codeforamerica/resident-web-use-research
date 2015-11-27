@@ -1,4 +1,4 @@
-ResidentResearch = { }
+ResidentResearch = window.ResidentResearch || { }
 
 ResidentResearch.censusReporter = function(tracts) {
   tracts = tracts;
