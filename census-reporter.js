@@ -14,57 +14,57 @@ ResidentResearch.censusReporter = function(tracts) {
   };
 
   var populationResult = function(d, sq_km) {
-    var data = estimate(d, 'B01003', 'B01003001');
+    var data = estimateError(d, 'B01003', 'B01003001');
     return {
       'B01003001': data,
-      'population density': density(data, sq_km)
+      'population density': densityError(data, sq_km)
     };
   }
 
   var rentalResult = function(d, sq_km) {
-    var ownerHousing = estimate(d, 'B25003', 'B25003002'),
-    housing = estimate(d, 'B25003', 'B25003001'),
+    var ownerHousing = estimateError(d, 'B25003', 'B25003002'),
+    housing = estimateError(d, 'B25003', 'B25003001'),
     total = housing.estimate - ownerHousing.estimate;
     return {
       'B25003002': ownerHousing,
       'B25003001': housing,
-      'rental percentage': percentage(housing, total)
+      'rental percentage': percentageError(housing, total)
     };
   }
 
   var householdIncomeResult = function(d, sq_km) {
-    var median = estimate(d, 'B19013', 'B19013001');
+    var median = estimateError(d, 'B19013', 'B19013001');
     return {
       'B19013001': median
     };
   }
 
   var percapitaIncomeResult = function(d, sq_km) {
-    var income = estimate(d, 'B19301', 'B19301001');
+    var income = estimateError(d, 'B19301', 'B19301001');
     return {
       'B19301001': income
     };
   }
 
   var racialResult = function(d, sq_km) {
-    var hispanic = estimate(d, 'B03002', 'B03002012'),
-    white = estimate(d, 'B03002', 'B03002003'),
-    black = estimate(d, 'B03002', 'B03002004'),
-    asian = estimate(d, 'B03002', 'B03002006'),
+    var hispanic = estimateError(d, 'B03002', 'B03002012'),
+    white = estimateError(d, 'B03002', 'B03002003'),
+    black = estimateError(d, 'B03002', 'B03002004'),
+    asian = estimateError(d, 'B03002', 'B03002006'),
     total = estimate(d, 'B03002', 'B03002001');
     return {
       'B03002012': hispanic,
       'B03002003': white,
       'B03002004': black,
       'B03002006': asian,
-      'hispanic density': density(hispanic, sq_km),
-      'white density': density(white, sq_km),
-      'black density': density(black, sq_km),
-      'asian density': density(asian, sq_km),
-      'hispanic percentage': percentage(hispanic, total.estimate),
-      'white percentage': percentage(white, total.estimate),
-      'black percentage': percentage(black, total.estimate),
-      'asian percentage': percentage(asian, total.estimate)
+      'hispanic density': densityError(hispanic, sq_km),
+      'white density': densityError(white, sq_km),
+      'black density': densityError(black, sq_km),
+      'asian density': densityError(asian, sq_km),
+      'hispanic percentage': percentageError(hispanic, total),
+      'white percentage': percentageError(white, total),
+      'black percentage': percentageError(black, total),
+      'asian percentage': percentageError(asian, total)
     };
   }
 
@@ -85,16 +85,36 @@ ResidentResearch.censusReporter = function(tracts) {
     return result;
   };
 
+  var estimateErrorValues = function(estimateValue, errorValue) {
+    return { estimate: estimateValue, error: errorValue }
+  }
+
+  var estimateError = function(d, tableId, objectId) {
+    return { estimate: estimate(d, tableId, objectId), error: error(d, tableId, objectId) }
+  }
+
   var estimate = function(d, tableId, objectId) {
-    return { estimate: d[tableId].estimate[objectId], error: d[tableId].error[objectId]};
+    return d[tableId].estimate[objectId];
   }
 
-  var percentage = function(d, total) {
-    return { estimate: 100 * d.estimate / total, error: undefined }
+  var error = function(d, tableId, objectId) {
+    return d[tableId].error[objectId];
   }
 
-  var density = function(d, sq_km) {
-    return { estimate: d.estimate/sq_km, error: d.error/sq_km}
+  var percentageError = function(d, total) {
+    return estimateErrorValues(percentage(d.estimate,total), undefined );
+  }
+
+  var percentage = function(value, total) {
+    return 100 * value / total;
+  }
+
+  var densityError = function(d, sq_km) {
+    return estimateErrorValues(density(d.estimate,sq_km), density(d.error,sq_km));
+  }
+
+  var density = function(value, total) {
+    return value/total;
   }
 
   var getDataWithId = function(list, geoId) {
