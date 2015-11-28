@@ -9,10 +9,14 @@ ResidentResearch.surveyResults = function() {
       survey: {data: null, map: null}
       }
 
-  var loaded_tract_data = function(t) {
-    tracts = t;
+  var addRecommendationControls = function() {
     var buttons = new DemographicsControl(maps.recommendation.data, tracts);
     maps.recommendation.map.addControl(buttons);
+  };
+
+  var loaded_tract_data = function(t) {
+    tracts = t;
+    addRecommendationControls();
     function onerror(reason, ttop) {
         alert('Failed to load spreadsheet: ' + reason);
     }
