@@ -115,12 +115,7 @@ ResidentResearch.surveyResults = function() {
   };
 
   var render_survey_map = function() {
-    var geojson = {features: [], type: 'GeometryCollection'};
-
-    for(var i = 0; i < tracts.length; i++)
-    {
-        geojson.features.push(tracts[i].feature);
-    }
+    var geojson = create_geojson_features(tracts, 'GeometryCollection');
 
     var style_function = get_style_function(tracts, RESPONSES, GREENS);
 
@@ -132,15 +127,21 @@ ResidentResearch.surveyResults = function() {
   var loaded_tracts = function(cityGeoid, cityName, tracts) {
     city.name = cityName;
     city.geoid = cityGeoid;
-    var geojson = {features: [], type: 'GeometryCollection'};
-    for(var i = 0; i < tracts.length; i++) {
-        geojson.features.push(tracts[i].feature);
-    }
+    var geojson = create_geojson_features(tracts, 'GeometryCollection');
     maps.survey = build_map('survey-map', geojson);
     maps.recommendation = build_map('recommendation-map', geojson);
     update_status('Found ' + tracts.length + ' tracts. Loading data…');
     load_tract_data(tracts, loaded_tract_data);
   };
+
+  var create_geojson_features = function(tracts, type) {
+    var geojson = {features: [], type: type };
+    for(var i = 0; i < tracts.length; i++) {
+        geojson.features.push(tracts[i].feature);
+    }
+    return geojson;
+  };
+
   return {
     init: function() {
       update_status('Loading city tracts…');
