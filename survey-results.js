@@ -5,9 +5,9 @@ ResidentResearch.surveyResults = function() {
   responses= null, tracts= null,
   city= {name: null, geoid: null},
   maps= {
-      recommendation: {data: null, map: null},
-      survey: {data: null, map: null}
-      }
+    recommendation: {data: null, map: null},
+    survey: {data: null, map: null}
+  };
 
   var addRecommendationControls = function() {
     var buttons = new DemographicsControl(maps.recommendation.data, tracts);
@@ -105,13 +105,13 @@ ResidentResearch.surveyResults = function() {
     // Sort from most to least significant
     regressions.sort(function(a, b) { return Math.abs(b[1]) - Math.abs(a[1]) });
 
-      var text_function = function(d) {
-        return d[0] + ': ' + d[1].toFixed(3);
-      }
-      create_list(regressions, 'regressions',text_function);
+    var text_function = function(d) {
+      return d[0] + ': ' + d[1].toFixed(3);
+    }
+    create_list(regressions, 'regressions',text_function);
 
-      update_status('Found ' + tracts.length + ' tracts in ' + city.name + ' and <a target="_blank" href="'+spreadsheet_url+'">a spreadsheet with ' + responses.length + ' responses</a>.');
-      render_survey_map();
+    update_status('Found ' + tracts.length + ' tracts in ' + city.name + ' and <a target="_blank" href="'+spreadsheet_url+'">a spreadsheet with ' + responses.length + ' responses</a>.');
+    render_survey_map();
   };
 
   var render_survey_map = function() {
