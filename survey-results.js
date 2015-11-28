@@ -21,8 +21,52 @@ ResidentResearch.surveyResults = function() {
         alert('Failed to load spreadsheet: ' + reason);
     }
     update_status('Loaded data for ' + tracts.length + ' tracts in ' + city.name + '. Loading spreadsheet…');
+
     load_spreadsheet(get_query_variable('gdoc'), 'Survey Results All', loaded_spreadsheet, onerror);
   };
+
+  var update_response_access_info = function(response, access) {
+    if(response.fields['Web on computer at home?']) {
+        access['computer-at-home'] += 1;
+    }
+
+    if(response.fields['Web on cell phone?']) {
+        access['cell-phone'] += 1;
+    }
+
+    if(response.fields['Web on computer at work?']) {
+        access['computer-at-work'] += 1;
+    }
+
+    if(response.fields['Web on public computer?']) {
+        access['public-computer'] += 1;
+    }
+
+    if(response.fields["Web on friend's computer?"]) {
+        access['friend-computer'] += 1;
+    }
+    return access;
+  };
+
+  var update_response_language_info = function(response, languages) {
+    var language = response.fields['Language spoken at home'];
+    if(language && language.toLocaleLowerCase() in languages) {
+        languages[language.toLocaleLowerCase()] += 1;
+    }
+    return languages;
+  };
+
+  var update_languages_text = function(languages) {
+    for(var id in languages) {
+        update_text(id, languages[id]);
+    }
+  }
+
+  var update_access_text = function(access) {
+    for(var id in access) {
+        update_text(id, access[id]);
+    }
+  }
 
   var loaded_spreadsheet = function(all_responses, spreadsheet_url) {
     responses = all_responses;
@@ -41,51 +85,19 @@ ResidentResearch.surveyResults = function() {
         "public-computer": 0,
         "friend-computer": 0
         };
-    
-    for(var i = 0; i < all_responses.length; i++)
-    {
-        var response = all_responses[i],
-            language = response.fields['Language spoken at home'];
-        
-        if(language && language.toLocaleLowerCase() in languages) {
-            languages[language.toLocaleLowerCase()] += 1;
-        }
-        
-        if(response.fields['Web on computer at home?']) {
-            access['computer-at-home'] += 1;
-        }
-        
-        if(response.fields['Web on cell phone?']) {
-            access['cell-phone'] += 1;
-        }
-        
-        if(response.fields['Web on computer at work?']) {
-            access['computer-at-work'] += 1;
-        }
-        
-        if(response.fields['Web on public computer?']) {
-            access['public-computer'] += 1;
-        }
-        
-        if(response.fields["Web on friend's computer?"]) {
-            access['friend-computer'] += 1;
-        }
 
-        if(response.feature)
-        {
+    for(var i = 0; i < all_responses.length; i++) {
+        var response = all_responses[i];
+        languages = update_response_language_info(response, languages);
+        access = update_response_access_info(response, access);
+
+        if(response.feature) {
             geo_responses.push(response);
         }
     }
-    
-    for(var id in languages)
-    {
-        update_text(id, languages[id]);
-    }
 
-    for(var id in access)
-    {
-        update_text(id, access[id]);
-    }
+    update_languages_text(languages);
+    update_access_text(access);
 
     update_status('Found ' + tracts.length + ' tracts in ' + city.name + ' and <a target="_blank" href="' + spreadsheet_url + '">a spreadsheet with ' + geo_responses.length + ' geographic responses</a>.');
     correlate_geographies(geo_responses, tracts, correlated_spreadsheet);
