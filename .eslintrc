@@ -1,0 +1,14 @@
+{
+  "extends": "eslint:recommended",
+  "globals": {
+    "L": false,
+    "turf": false,
+    "Tabletop": false,
+    "regression": false
+  },
+  "env": {
+    "browser": true,
+    "jquery": true,
+    "mocha": true
+  }
+}
