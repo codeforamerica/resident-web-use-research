@@ -55,7 +55,7 @@ function Map() {
     }
     this.map.on('popupclose', resetStyle);
     this.map.on('popupopen', function() { that.popupOpened = false; });
-    this.dataLayer = L.geoJson(this.geojson, {style: choropleth_style_null, onEachFeature: this.onEachFeature, click: highlightFeature}).addTo(this.map);
+    this.dataLayer = L.geoJson(this.geojson, {style: choropleth_style_null, onEachFeature: this.onEachFeature, click: highlightFeature, templateData: this.templateData}).addTo(this.map);
     var topPane = this.map._createPane('leaflet-top-pane', this.map.getPanes().mapPane);
     topPane.appendChild(tileLayerLabels.getContainer());
     tileLayerLabels.setZIndex(9);
