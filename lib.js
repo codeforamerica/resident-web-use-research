@@ -558,6 +558,17 @@ function choropleth_style_null()
         "fillOpacity": 0.3
     };
 }
+function create_overlay(mapId, className, initialContent) {
+  jQuery('#'+mapId).append('<div class="'+className+'"></div>');
+  update_overlay(mapId, className, initialContent);
+}
+function update_overlay(mapId, className, content) {
+  var $el = jQuery('#'+mapId).find('div.'+className);
+  $el.html(content);
+}
+function remove_overlay(mapId, className) {
+  jQuery('#'+mapId).find('div.'+className).remove();
+}
 /**
  * Build TileLayer String for Stamen layers
  *

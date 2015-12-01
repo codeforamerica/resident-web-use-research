@@ -42,4 +42,11 @@
 .button-blues {
     background: rgb(66, 184, 221); /* this is a light blue */
 }
-
+.leaflet-container .loading {
+  width: 200px;
+  background: rgba(255,255,255,0.8);
+  padding: 20px;
+  margin: 160px auto;
+  position: relative;
+  text-align: center;
+}
