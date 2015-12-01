@@ -1,12 +1,13 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html> -->
 <html lang="en">
 <head>
 	<meta charset="utf-8" />
 	<title>Resident Web Use Results</title>
-    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+    <link rel="stylesheet" href="//cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
     <link rel="stylesheet" href="style.css" />
-    <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
-    <script src="https://code.jquery.com/jquery-1.11.2.min.js" charset="utf-8"></script>
+    <script src="//cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+    <script src="//code.jquery.com/jquery-1.11.2.min.js" charset="utf-8"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
 	<script src="turf.min.js"></script>
 	<script src="regression.js"></script>
 	<script src="tabletop.js"></script>
@@ -130,7 +131,7 @@
             }
         
             update_status('Found ' + stuff.tracts.length + ' tracts in ' + stuff.city.name + ' and <a target="_blank" href="' + spreadsheet_url + '">a spreadsheet with ' + geo_responses.length + ' geographic responses</a>.');
-            correlate_geographies(geo_responses, stuff.tracts, correlated_spreadsheet);
+	    _.defer(correlate_geographies,geo_responses, stuff.tracts, correlated_spreadsheet);
         }
         
         function correlated_spreadsheet(tracts)
