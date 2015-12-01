@@ -23,12 +23,12 @@ ResidentResearch.censusReporter = function(tracts) {
 
   var rentalResult = function(d, sq_km) {
     var ownerHousing = estimateError(d, 'B25003', 'B25003002'),
-    housing = estimateError(d, 'B25003', 'B25003001'),
-    total = housing.estimate - ownerHousing.estimate;
+    total = estimateError(d, 'B25003', 'B25003001'),
+    rental = total.estimate - ownerHousing.estimate;
     return {
       'B25003002': ownerHousing,
-      'B25003001': housing,
-      'rental percentage': percentageError(housing, total)
+      'B25003001': total,
+      'rental percentage': estimateErrorValues(percentage(rental, total.estimate), undefined)
     };
   }
 
