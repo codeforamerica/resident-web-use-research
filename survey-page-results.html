@@ -43,10 +43,16 @@
             
             stuff.maps.survey = build_map('survey-map', geojson);
             stuff.maps.recommendation = build_map('recommendation-map', geojson);
+
             create_overlay('survey-map', 'loading', '<h1>Loading city tracts...</h1>');
             create_overlay('recommendation-map', 'loading', '<h1>Loading city tracts...</h1>');
             
-            update_status('Found ' + tracts.length + ' tracts. Loading data…');
+            jQuery('body').on("surveyMessage", surveyProgressEventHandler);
+            jQuery('body').on("recommendationMessage", recommendationProgressEventHandler);
+            message = 'Found ' + tracts.length + ' tracts. Loading data…';
+            update_status(message);
+            jQuery( "body" ).trigger( "surveyMessage", [message] );
+            jQuery( "body" ).trigger( "recommendationMessage", [message] );
             load_tract_data(tracts, loaded_tract_data);
 	    }
 	    
@@ -62,7 +68,9 @@
                 alert('Failed to load spreadsheet: ' + reason);
             }
 
-            update_status('Loaded data for ' + tracts.length + ' tracts in ' + stuff.city.name + '. Loading spreadsheet…');
+            var message = ('Loaded data for ' + tracts.length + ' tracts in ' + stuff.city.name + '. Loading spreadsheet…');
+            update_status(message);
+            jQuery( "body" ).trigger( "surveyMessage", [message] );
             remove_overlay('recommendation-map', 'loading');
             load_spreadsheet(get_query_variable('gdoc'), 'Survey Results All', loaded_spreadsheet, onerror);
 	    }
@@ -89,6 +97,7 @@
             
             for(var i = 0; i < all_responses.length; i++)
             {
+                jQuery( "body" ).trigger( "surveyMessage", ['Reading reponse '+(i+1)+' of '+all_responses.length+'...'] );
                 var response = all_responses[i],
                     language = response.fields['Language spoken at home'];
                 
@@ -132,8 +141,9 @@
                 document.getElementById(id).innerText = access[id];
             }
         
-            update_status('Found ' + stuff.tracts.length + ' tracts in ' + stuff.city.name + ' and <a target="_blank" href="' + spreadsheet_url + '">a spreadsheet with ' + geo_responses.length + ' geographic responses</a>.');
-            update_overlay('survey-map', 'loading', 'Calculating reponse...');
+            var message = ('Found ' + stuff.tracts.length + ' tracts in ' + stuff.city.name + ' and <a target="_blank" href="' + spreadsheet_url + '">a spreadsheet with ' + geo_responses.length + ' geographic responses</a>.');
+            update_status(message);
+            jQuery( "body" ).trigger( "surveyMessage", [message] );
             correlate_geographies(geo_responses, stuff.tracts, correlated_spreadsheet);
         }
         

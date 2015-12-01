@@ -89,6 +89,7 @@ function load_spreadsheet(gdoc_url, sheet_name, onsuccess, onerror)
                         feature = null;
                     }
                     
+                    jQuery( "body" ).trigger( "surveyMessage", ['Reading reponse'+(i+1)+' of '+data.length+'...'] );
                     responses.push(new Response(fields, feature));
                 }
             }
@@ -313,6 +314,9 @@ function correlate_geographies(responses, tracts, oncorrelated)
                 tract.responses += share;
             }
         }
+        console.log('Response', response.feature.properties.ZCTA5CE10, '-- est.', population_estimate.toFixed(0), 'people');
+        jQuery( "body" ).trigger( "surveyMessage", ['Calculating reponse '+(i+1)+' of '+responses.length+'...'] );
+        
     }
     
     var total = 0;
@@ -320,6 +324,7 @@ function correlate_geographies(responses, tracts, oncorrelated)
     for(var i = 0; i < tracts.length; i++)
     {
         console.log('Tract', tracts[i].geoid, '-- est.', tracts[i].responses.toFixed(3), 'responses');
+        jQuery( "body" ).trigger( "surveyMessage", ['Calculating tract '+(i+1)+' of '+tracts.length+'...'] );
         total += tracts[i].responses;
     }
     
@@ -644,4 +649,12 @@ function update_status(message)
 }
 function buttonClassNameForColor(colorString) {
     return "button-"+colorString.toLowerCase().split("_")[0];
+}
+function surveyProgressEventHandler(e, message) {
+  var $el = jQuery('#survey-map').find('div.loading');
+  $el.html(message);
+}
+function recommendationProgressEventHandler(e, message) {
+  var $el = jQuery('#recommendation-map').find('div.loading');
+  $el.html(message);
 }
