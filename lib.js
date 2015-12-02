@@ -4,6 +4,53 @@ var RESPONSES = 'Survey responses',
     CR_API_BASE = 'http://api.censusreporter.org/1.0',
     CR_API_PAGE = 60;
 
+ResidentResearch = window.ResidentResearch || {};
+
+ResidentResearch.correlation = function() {
+
+  with_no_population = function(object_to_filter) {
+      return object_to_filter.population !== false;
+  }
+  exclude_not_intersecting_tracts = function(intersecting_populations) {
+    return _.filter(intersecting_populations, with_no_population);
+  }
+  population_for_response_in_tract = function(tract,response) {
+    return { population: tract.getFeatureIntersectionPopulation(response.feature), geoid: tract.geoid };
+  }
+  intersection_population = function(tracts, response) {
+    return exclude_not_intersecting_tracts(_.map(tracts, function(tract){
+      return population_for_response_in_tract(tract, response);
+    }));
+  }
+  total_intersection_population = function(intersection_population) {
+    return _.reduce(intersection_population, function(total, intersection_population){
+      return total + intersection_population.population;
+    },0);
+  }
+  intersection_population_for_geoid = function(intersecting_populations, geoid) {
+    return _.where(intersecting_populations, {geoid: geoid })
+  }
+  calculate_response_ratio = function(intersection_populations, population_estimate, current_ratio) {
+    return _.reduce(intersection_populations, function(total, intersection_population){
+      return total + (intersection_population.population / population_estimate);
+    },current_ratio);
+  }
+  sum_response_ratios = function(tract, intersection_populations,population_estimate) {
+    tract.responses = calculate_response_ratio(intersection_population_for_geoid(intersection_populations,tract.geoid), population_estimate, tract.responses);
+    console.log('Tract', tract.geoid, '-- est.', tract.responses.toFixed(3), 'responses');
+    return tract;
+  }
+  return {
+    accumulate_tracts: function (tracts, response) {
+      intersection_pops = intersection_population(tracts, response);
+      population_estimate = total_intersection_population(intersection_pops);
+      _.map(tracts, function(tract) {
+        sum_response_ratios(tract, intersection_pops,population_estimate);
+      });
+      console.log('Response', response.feature.properties.ZCTA5CE10, '-- est.', population_estimate.toFixed(0), 'people');
+    }
+  }
+}
 /**
  * Container class for census tract objects.
  *
@@ -17,6 +64,24 @@ function Tract(geoid, feature)
     this.feature = feature;
     this.responses = 0.0;
     this.data = null;
+    this.getFeatureIntersectionPopulation = function(feature) {
+      return this.getIntersectionPopulation(this.getIntersectionWithFeature(feature));
+    };
+    this.getIntersectionWithFeature = function(feature) {
+      return turf.intersect(this.feature, feature);
+    };
+    this.getIntersectionPopulation = function(intersection) {
+      return(intersection ? this._intersectionShare(intersection) * this.getEstimate() : false);
+    };
+    this.getEstimate = function() {
+      return this.getPopulation().estimate;
+    };
+    this.getPopulation = function() {
+      return this.data['B01003001'];
+    };
+    this._intersectionShare = function(intersection) {
+      return(turf.area(intersection) / turf.area(this.feature));
+    };
 }
 
 /**
@@ -180,7 +245,6 @@ function load_tract_data(original_tracts, onloaded_all_data)
       }
     }
 }
-
 /**
  * Correlate geographic overage of neighborhoods with Census tracts.
  *
@@ -193,62 +257,39 @@ function correlate_geographies(responses, tracts, oncorrelated)
 {
     console.log('Responses:', responses.length);
     console.log('One response:', responses[0]);
-    
+
     console.log('Tracts:', tracts.length);
     console.log('One tract:', tracts[0]);
-    
-    for(var i = 0; i < responses.length; i++)
-    {
-        var response = responses[i],
-            // Overall population estimated to lie within this response.
-            population_estimate = 0,
-            // Tract-by-tract shares of overall population.
-            intersection_pops = {};
-        
-        for(var j = 0; j < tracts.length; j++)
-        {
-            var tract = tracts[j],
-                intersection = turf.intersect(tract.feature, response.feature);
-            
-            if(intersection)
-            {
-                var tract_share = turf.area(intersection) / turf.area(tract.feature),
-                    intersection_pop = tract_share * tract.data['B01003001'].estimate;
-                
-                population_estimate += intersection_pop;
-                intersection_pops[tract.geoid] = intersection_pop;
-            
-                //console.log('Tract ' + tract.feature.properties.name + ' intersects area ' + response.feature.properties.ZCTA5CE10 + ' by ' + Math.round(share * 100) + '%');
-            }
-        }
-    
-        console.log('Response', response.feature.properties.ZCTA5CE10, '-- est.', population_estimate.toFixed(0), 'people');
-        
-        for(var j = 0; j < tracts.length; j++)
-        {
-            var tract = tracts[j],
-                share = intersection_pops[tract.geoid] / population_estimate;
-            
-            if(share)
-            {
-                tract.responses += share;
-            }
-        }
-    }
-    
-    var total = 0;
-    
-    for(var i = 0; i < tracts.length; i++)
-    {
-        console.log('Tract', tracts[i].geoid, '-- est.', tracts[i].responses.toFixed(3), 'responses');
-        total += tracts[i].responses;
-    }
-    
-    console.log('Total', total.toFixed(3));
-    
-    oncorrelated(tracts);
-}
 
+    function work(item) {
+      correlate = ResidentResearch.correlation();
+      correlate.accumulate_tracts(tracts, item);
+    }
+    function finish(responses) {
+      oncorrelated(tracts);
+    }
+    timedChunk(responses, work, this, finish);
+}
+//Copyright 2009 Nicholas C. Zakas. All rights reserved.
+//MIT Licensed
+function timedChunk(items, process, context, callback){
+    var todo = items.concat();   //create a clone of the original
+
+    setTimeout(function(){
+
+        var start = +new Date();
+
+        do {
+             process.call(context, todo.shift());
+        } while (todo.length > 0 && (+new Date() - start < 50));
+
+        if (todo.length > 0){
+            setTimeout(arguments.callee, 25);
+        } else {
+            callback(items);
+        }
+    }, 25);
+}
 /**
  * Calculate coefficient of determination for tract responses, return R-squared.
  *

@@ -1,6 +1,5 @@
 module.exports = function(config) {
   config.set({
-
     basePath: '',
     frameworks: ['mocha', 'chai', 'sinon-chai', 'fixture'],
     files: [
@@ -8,7 +7,8 @@ module.exports = function(config) {
       'node_modules/underscore/underscore.js',
       'node_modules/jquery/dist/jquery.js',
       '*.js',
-      'test/**/*Spec.js'
+      'test/**/*Spec.js',
+      { pattern: 'test/mocks/**/*' }
     ],
     exclude: [
       '**/*.swp'
