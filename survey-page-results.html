@@ -44,9 +44,9 @@
                 geojson.features.push(tracts[i].feature);
             }
             
-            stuff.maps.survey = new Map();
+            stuff.maps.survey = ResidentResearch.map();
             stuff.maps.survey.init('survey-map', geojson);
-            stuff.maps.recommendation = new Map();
+            stuff.maps.recommendation = ResidentResearch.map();
             stuff.maps.recommendation.init('recommendation-map', geojson);
             
             update_status('Found ' + tracts.length + ' tracts. Loading data…');
@@ -58,7 +58,7 @@
 	        stuff.tracts = tracts;
 	        
 	        var buttons = new DemographicsControl(stuff.maps.recommendation, tracts);
-	        stuff.maps.recommendation.map.addControl(buttons);
+	        stuff.maps.recommendation.addControl(buttons);
 	    
             function onerror(reason, ttop)
             {

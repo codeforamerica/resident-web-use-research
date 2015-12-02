@@ -581,7 +581,6 @@ var DemographicsControl = L.Control.extend({
     
         var style_function = get_style_function(this.tracts, layer_name, colors);
     
-        this.map.dataLayer.clearLayers();
         this.map.setData(geojson);
         this.map.setStyle(style_function);
         this.map.reloadStyle();

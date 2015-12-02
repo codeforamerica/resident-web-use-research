@@ -15,7 +15,8 @@ module.exports = function(config) {
     ],
     preprocessors: {
       '**/*.json'   : ['html2js'],
-      'lib.js': 'coverage'
+      'lib.js': 'coverage',
+      'map.js': 'coverage'
     },
     reporters: ['progress','coverage'],
     coverageReporter: {

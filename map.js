@@ -1,91 +1,14 @@
-function Map() {
-  this.element_id = "";
-  this.geojson = {};
-  this.style = {};
-  this.dataLayer = {};
-  this.map = {};
+ResidentResearch = window.ResidentResearch || {};
 
-  this.init = function(element_id, geojson) {
-    this.element_id = element_id;
-    this.geojson = geojson;
-    this.initMap();
-  }
-  this.initMap = function() {
-    var popupOpened,
-        extent = this.calculateExtent(this.geojson.features),
-        xmin = extent[0], ymin = extent[1],
-        xmax = extent[2], ymax = extent[3],
-        center = new L.LatLng(ymax/2 + ymin/2, xmax/2 + xmin/2),
-        northeast = new L.LatLng(ymax, xmax),
-        southwest = new L.LatLng(ymin, xmin),
-        maxBounds = new L.latLngBounds(northeast, southwest),
-        options = {
-            center: center, zoom: 12,
-            maxBounds: maxBounds, minZoom: 9, maxZoom: 16,
-            scrollWheelZoom: false, attributionControl: false
-            };
-    this.map = new L.Map(this.element_id, options),
-        layerOptions = { detectRetina: true },
-        tileLayerBg = new L.TileLayer(stamenLayer('toner-background', L.Browser.retina)),
-        tileLayerLabels = new L.TileLayer(stamenLayer('toner-labels', L.Browser.retina));
-    this.map.addLayer(tileLayerBg);
-    this.map.addLayer(tileLayerLabels);
+ResidentResearch.map = function() {
+  var elementId = "",
+    popupOpened = false,
+  geojson = {},
+  style = {},
+  dataLayer = {},
+  map = {};
 
-    this.map.addControl(this.attributions());
-    var that = this;
-    resetStyle = function(e) {
-      if(!that.popupOpened) {
-        that.dataLayer.setStyle(that.style);
-      }
-      that.popupOpened = false;
-    }
-    highlightFeature= function(e) {
-      that.popupOpened = true;
-      that.dataLayer.setStyle(that.style);
-      var layer = e.target;
-
-      layer.setStyle({
-          weight: 5,
-          color: '#666',
-          dashArray: '',
-      });
-      if (!L.Browser.ie && !L.Browser.opera) {
-          layer.bringToFront();
-      }
-    }
-    this.map.on('popupclose', resetStyle);
-    this.map.on('popupopen', function() { that.popupOpened = false; });
-    this.dataLayer = L.geoJson(this.geojson, {style: choropleth_style_null, onEachFeature: this.onEachFeature, click: highlightFeature, templateData: this.templateData}).addTo(this.map);
-    var topPane = this.map._createPane('leaflet-top-pane', this.map.getPanes().mapPane);
-    topPane.appendChild(tileLayerLabels.getContainer());
-    tileLayerLabels.setZIndex(9);
-    return this;
-  };
-  this.attributions = function() {
-    var attr = L.control.attribution({prefix: '', position: 'bottomright'});
-    attr.addAttribution('Demographic data via <a target="_blank" href="http://censusreporter.org">Census Reporter</a>');
-    attr.addAttribution('<a target="_blank" href="http://maps.stamen.com">Cartography</a> by <a target="_blank" href="http://stamen.com">Stamen</a>');
-    attr.addAttribution('Map Data <a target="_blank" href="http://www.openstreetmap.org/copyright">&copy; OSM contributors</a>');
-    return attr;
-  };
-  this.calculateExtent = function(features) {
-    var envelope, feature,
-        featureLength = features.length;
-    for(var i = 0; i < featureLength; i++)
-    {
-        feature = features[i];
-
-        if(envelope == undefined) {
-            envelope = turf.envelope(feature);
-
-        } else {
-            envelope = turf.envelope(turf.union(envelope, feature));
-        }
-    }
-
-    return turf.extent(turf.buffer(envelope, 6, 'kilometers'));
-  },
-  this.templateData = function(properties) {
+  var getTemplateData = function(properties) {
     var templateData = {
       tractName: properties.name,
       population: numberWithCommas(properties['2013_population_estimate']),
@@ -104,11 +27,97 @@ function Map() {
     }
     return templateData;
   };
-  this.onEachFeature = function(feature, layer) {
-    layer.on({
-      click: this.click
+  var resetStyle = function(e) {
+    if(!popupOpened) {
+      dataLayer.setStyle(that.style);
+    }
+    popupOpened = false;
+  }
+  var highlightFeature= function(e) {
+    popupOpened = true;
+    dataLayer.setStyle(that.style);
+    var layer = e.target;
+
+    layer.setStyle({
+        weight: 5,
+        color: '#666',
+        dashArray: '',
     });
-    var templateData = this.templateData(feature.properties);
+    if (!L.Browser.ie && !L.Browser.opera) {
+        layer.bringToFront();
+    }
+  }
+
+  var optionsForGeojson = function() {
+    var extent = calculateExtent(geojson.features),
+        xmin = extent[0], ymin = extent[1],
+        xmax = extent[2], ymax = extent[3],
+        center = new L.LatLng(ymax/2 + ymin/2, xmax/2 + xmin/2),
+        northeast = new L.LatLng(ymax, xmax),
+        southwest = new L.LatLng(ymin, xmin),
+        maxBounds = new L.latLngBounds(northeast, southwest),
+        options = {
+            center: center, zoom: 12,
+            maxBounds: maxBounds, minZoom: 9, maxZoom: 16,
+            scrollWheelZoom: false, attributionControl: false
+            };
+    return options;
+  };
+  var setEventListener = function() {
+    var that = this;
+    map.on('popupclose', resetStyle);
+    map.on('popupopen', function() { that.popupOpened = false; });
+  };
+
+  var layerOrderingHack = function(layer) {
+    var topPane = map._createPane('leaflet-top-pane', map.getPanes().mapPane);
+    topPane.appendChild(layer.getContainer());
+    layer.setZIndex(9);
+  };
+
+  var initMap = function() {
+    var layerOptions = { detectRetina: true },
+    tileLayerBg = new L.TileLayer(stamenLayer('toner-background', L.Browser.retina)),
+    tileLayerLabels = new L.TileLayer(stamenLayer('toner-labels', L.Browser.retina));
+    map = new L.Map(elementId, optionsForGeojson());
+    map.addLayer(tileLayerBg);
+    map.addLayer(tileLayerLabels);
+
+    map.addControl(attributions());
+    dataLayer = L.geoJson(geojson, {style: choropleth_style_null, onEachFeature: onEachFeature}).addTo(map);
+    setEventListener();
+    layerOrderingHack(tileLayerLabels);
+    return this;
+  };
+  var attributions = function() {
+    var attr = L.control.attribution({prefix: '', position: 'bottomright'});
+    attr.addAttribution('Demographic data via <a target="_blank" href="http://censusreporter.org">Census Reporter</a>');
+    attr.addAttribution('<a target="_blank" href="http://maps.stamen.com">Cartography</a> by <a target="_blank" href="http://stamen.com">Stamen</a>');
+    attr.addAttribution('Map Data <a target="_blank" href="http://www.openstreetmap.org/copyright">&copy; OSM contributors</a>');
+    return attr;
+  };
+  var calculateExtent = function(features) {
+    var envelope, feature,
+        featureLength = features.length;
+    for(var i = 0; i < featureLength; i++)
+    {
+        feature = features[i];
+
+        if(envelope == undefined) {
+            envelope = turf.envelope(feature);
+
+        } else {
+            envelope = turf.envelope(turf.union(envelope, feature));
+        }
+    }
+
+    return turf.extent(turf.buffer(envelope, 6, 'kilometers'));
+  };
+  onEachFeature = function(feature, layer) {
+    layer.on({
+      click: highlightFeature
+    });
+    var templateData = getTemplateData(feature.properties);
     if(feature.properties.data) {
       html = document.getElementById("response-popup").innerHTML;
       popupContent = L.Util.template(html, templateData);
@@ -117,18 +126,29 @@ function Map() {
     }
     layer.bindPopup(popupContent);
   };
-  this.setData = function(data) {
-    this.geojson = data;
-    this.updateDataLayer();
-  };
-  this.updateDataLayer = function() {
-    this.dataLayer.clearLayers();
-    this.dataLayer.addData(this.geojson);
-  };
-  this.setStyle = function(style) {
-    this.style = style;
-  };
-  this.reloadStyle = function() {
-    this.dataLayer.setStyle(this.style);
+
+  return {
+    init: function(element, gjson) {
+      elementId = element;
+      geojson = gjson;
+      initMap();
+    },
+    updateDataLayer: function() {
+      dataLayer.clearLayers();
+      dataLayer.addData(geojson);
+    },
+    setData: function(data) {
+      geojson = data;
+      this.updateDataLayer();
+    },
+    setStyle: function(newStyle) {
+      style = newStyle;
+    },
+    reloadStyle: function() {
+      dataLayer.setStyle(style);
+    },
+    addControl: function(control) {
+      map.addControl(control);
+    },
   };
 }
