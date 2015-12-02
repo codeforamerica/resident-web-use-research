@@ -90,7 +90,8 @@ function Map() {
       tractName: properties.name,
       population: numberWithCommas(properties['2013_population_estimate']),
       geoid: properties.geoid,
-      responsesHighLow: human_float(properties.responses),
+      round: (properties.responses > 0 ? '~ ': ''),
+      responsePlural: (Math.ceil(properties.responses) == 1 ? '': 's'),
       responses: Math.ceil(properties.responses)
     }
     if(properties.data) {
