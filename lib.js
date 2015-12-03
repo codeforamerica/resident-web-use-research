@@ -448,10 +448,10 @@ var DemographicsControl = L.Control.extend({
     
     options: {position: 'topright'},
     
-    initialize: function(datalayer, tracts, options)
+    initialize: function(map, tracts, options)
     {
         this.tracts = tracts;
-        this.datalayer = datalayer;
+        this.map = map;
         L.Util.setOptions(this, options);
     },
     
@@ -493,14 +493,18 @@ var DemographicsControl = L.Control.extend({
     
         for(var i = 0; i < this.tracts.length; i++)
         {
-            geojson.features.push(this.tracts[i].feature);
+            var tract = stuff.tracts[i];
+            var feature = tract.feature;
+            feature.properties.data = tract.data;
+            feature.properties.responses = tract.responses;
+            geojson.features.push(feature);
         }
     
         var style_function = get_style_function(this.tracts, layer_name, colors);
     
-        this.datalayer.clearLayers();
-        this.datalayer.addData(geojson);
-        this.datalayer.setStyle(style_function);
+        this.map.setData(geojson);
+        this.map.setStyle(style_function);
+        this.map.reloadStyle();
     }
     
 });
@@ -520,6 +524,20 @@ function choropleth_style_null()
         "fillOpacity": 0.3
     };
 }
+
+function tooltipTemplate() {
+
+    return '<h3>{tractName}</h3><b>Population:</b> {population}<br/>Details: <a target="_blank" href="http://censusreporter.org/profiles/{geoid}">{geoid}</a>';
+}
+function detailTooltipTemplate() {
+      return '<b>Responses:</b> {responses}<br/>'+
+      '<b>White Population:</b> {white} %<br/>'+
+      '<b>Black Population:</b> {black} %<br/>'+
+      '<b>Hispanic Population:</b> {hispanic} %<br/>'+
+      '<b>Asian Population:</b> {asian} %<br/>'+
+      '<b>Rental percentage:</b> {rental} %<br/>'+
+      '<b>Per capita income:</b> ${income}<br/>';
+}
 /**
  * Build TileLayer String for Stamen layers
  *
@@ -528,70 +546,31 @@ function choropleth_style_null()
 function stamenLayer(stamenType, retina) {
   return 'http://{s}.tile.stamen.com/'+stamenType+'/{z}/{x}/{y}'+(retina ? '@2x': '')+'.png';
 }
-/**
- * Build a map with GeoJSON data.
- *
- * Return reference to GeoJSON data layer.
- */
-function build_map(element_id, geojson)
-{
-    var envelope, feature;
-    
-    for(var i = 0; i < geojson.features.length; i++)
-    {
-        feature = geojson.features[i];
-        
-        if(envelope == undefined) {
-            envelope = turf.envelope(feature);
 
-        } else {
-            envelope = turf.envelope(turf.union(envelope, feature));
-        }
-    }
-    
-    var extent = turf.extent(turf.buffer(envelope, 2, 'kilometers')),
-        xmin = extent[0], ymin = extent[1],
-        xmax = extent[2], ymax = extent[3],
-        center = new L.LatLng(ymax/2 + ymin/2, xmax/2 + xmin/2),
-        northeast = new L.LatLng(ymax, xmax),
-        southwest = new L.LatLng(ymin, xmin),
-        maxBounds = new L.latLngBounds(northeast, southwest),
-        options = {
-            center: center, zoom: 12,
-            maxBounds: maxBounds, minZoom: 9, maxZoom: 16,
-            scrollWheelZoom: false, attributionControl: false
-            };
-    
-    var map = new L.Map(element_id, options),
-        tileLayerBg = new L.TileLayer(stamenLayer('toner-background', L.Browser.retina));
-        tileLayerLabels = new L.TileLayer(stamenLayer('toner-labels', L.Browser.retina));
-
-    map.addLayer(tileLayerBg);
-    map.addLayer(tileLayerLabels);
-    
-    
-    var attr = L.control.attribution({prefix: '', position: 'bottomright'});
-    attr.addAttribution('Demographic data via <a target="_blank" href="http://censusreporter.org">Census Reporter</a>');
-    attr.addAttribution('<a target="_blank" href="http://maps.stamen.com">Cartography</a> by <a target="_blank" href="http://stamen.com">Stamen</a>');
-    attr.addAttribution('Map Data <a target="_blank" href="http://www.openstreetmap.org/copyright">&copy; OSM contributors</a>');
-    map.addControl(attr);
-    
-    function onEachFeature(feature, layer)
-    {
-        layer.bindPopup('<a target="_blank" href="http://censusreporter.org/profiles/'+feature.properties.geoid+'">'+feature.properties.geoid+'</a>');
-    }
-    
-    var datalayer = L.geoJson(geojson, {style: choropleth_style_null, onEachFeature: onEachFeature}).addTo(map);
-    var topPane = map._createPane('leaflet-top-pane', map.getPanes().mapPane);
-    topPane.appendChild(tileLayerLabels.getContainer());
-    tileLayerLabels.setZIndex(9);
-    
-    return {data: datalayer, map: map};
+function human_float(number) {
+  if(number === 0) {
+    return '';
+  }
+  if(number % 1 < 0.5) {
+    return 'less than';
+  }
+  return 'more than';
 }
-
 function update_status(message)
 {
     document.getElementById('status').innerHTML = message;
+}
+var roundNumber = function(value, decimals) {
+    var precision = (!!decimals) ? decimals : 0,
+        factor = Math.pow(10, precision),
+        value = Math.round(value * factor) / factor;
+
+    return value;
+}
+var numberWithCommas = function(n) {
+    var parts = roundNumber(n).toString().split(".");
+
+    return parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",") + (parts[1] ? "." + parts[1] : "");
 }
 function buttonClassNameForColor(colorString) {
     return "button-"+colorString.toLowerCase().split("_")[0];

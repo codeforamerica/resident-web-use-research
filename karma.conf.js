@@ -14,8 +14,10 @@ module.exports = function(config) {
       '**/*.swp'
     ],
     preprocessors: {
+      '**/*.json'   : ['html2js'],
       'lib.js': 'coverage',
       'census-reporter.js': 'coverage'
+      'map.js': 'coverage'
     },
     reporters: ['progress','coverage'],
     coverageReporter: {
