@@ -29,13 +29,13 @@ ResidentResearch.map = function() {
   };
   var resetStyle = function(e) {
     if(!popupOpened) {
-      dataLayer.setStyle(that.style);
+      dataLayer.setStyle(style);
     }
     popupOpened = false;
   }
   var highlightFeature= function(e) {
     popupOpened = true;
-    dataLayer.setStyle(that.style);
+    dataLayer.setStyle(style);
     var layer = e.target;
 
     layer.setStyle({
@@ -64,9 +64,8 @@ ResidentResearch.map = function() {
     return options;
   };
   var setEventListener = function() {
-    var that = this;
     map.on('popupclose', resetStyle);
-    map.on('popupopen', function() { that.popupOpened = false; });
+    map.on('popupopen', function() { popupOpened = false; });
   };
 
   var layerOrderingHack = function(layer) {
