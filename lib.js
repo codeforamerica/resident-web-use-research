@@ -154,6 +154,7 @@ function load_spreadsheet(gdoc_url, sheet_name, onsuccess, onerror)
                         feature = null;
                     }
                     
+                    jQuery( "body" ).trigger( "surveyMessage", ['Reading reponse'+(i+1)+' of '+data.length+'...'] );
                     responses.push(new Response(fields, feature));
                 }
             }
@@ -268,11 +269,14 @@ function correlate_geographies(responses, tracts, oncorrelated)
     function finish(responses) {
       oncorrelated(tracts);
     }
-    timedChunk(responses, work, this, finish);
+    function chunkFinished(items) {
+      jQuery( "body" ).trigger( "surveyMessage", ['Calculating tract '+(responses.length - items.length + 1)+' of '+responses.length+'...'] );
+    }
+    timedChunk(responses, work, this, finish, chunkFinished);
 }
 //Copyright 2009 Nicholas C. Zakas. All rights reserved.
 //MIT Licensed
-function timedChunk(items, process, context, callback){
+function timedChunk(items, process, context, callback, chunkCallback){
     var todo = items.concat();   //create a clone of the original
 
     setTimeout(function(){
@@ -284,6 +288,7 @@ function timedChunk(items, process, context, callback){
         } while (todo.length > 0 && (+new Date() - start < 50));
 
         if (todo.length > 0){
+            chunkCallback(todo);
             setTimeout(arguments.callee, 25);
         } else {
             callback(items);
@@ -524,7 +529,17 @@ function choropleth_style_null()
         "fillOpacity": 0.3
     };
 }
-
+function create_overlay(mapId, className, initialContent) {
+  jQuery('#'+mapId).append('<div class="'+className+'"><div class="text"></div><div class="spinner"> <div class="bounce1"></div> <div class="bounce2"></div> <div class="bounce3"></div> </div></div>');
+  update_overlay(mapId, className, initialContent);
+}
+function update_overlay(mapId, className, content) {
+  var $el = jQuery('#'+mapId).find('div.'+className+' .text');
+  $el.html(content);
+}
+function remove_overlay(mapId, className) {
+  jQuery('#'+mapId).find('div.'+className).remove();
+}
 function tooltipTemplate() {
 
     return '<h3>{tractName}</h3><b>Population:</b> {population}<br/>Details: <a target="_blank" href="http://censusreporter.org/profiles/{geoid}">{geoid}</a>';
@@ -574,4 +589,12 @@ var numberWithCommas = function(n) {
 }
 function buttonClassNameForColor(colorString) {
     return "button-"+colorString.toLowerCase().split("_")[0];
+}
+function surveyProgressEventHandler(e, message) {
+  var $el = jQuery('#survey-map').find('div.loading .text');
+  $el.html(message);
+}
+function recommendationProgressEventHandler(e, message) {
+  var $el = jQuery('#recommendation-map').find('div.loading .text');
+  $el.html(message);
 }

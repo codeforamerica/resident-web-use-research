@@ -25,6 +25,23 @@
 .leaflet-popup-pane {
   z-index: 10;
 }
+.leaflet-container .loading {
+  width: 300px;
+  background: rgba(255,255,255,0.9);
+  border: 1px solid #ccc;
+  padding: 20px;
+  margin: 160px auto;
+  position: relative;
+  text-align: center;
+  font-size: 1.4em;
+}
+.leaflet-container .loading .text{
+}
+.leaflet-container .loading .spinner{
+  position: absolute;
+  top: 0px;
+  left: 40%;
+}
 .button {
     color: white;
     border-radius: 4px;
@@ -146,4 +163,45 @@
   color: #A0A0A0;
   margin: 0;
   font-weight: bold;
+}
+.spinner {
+  margin: 0 auto;
+  width: 70px;
+  text-align: center;
+}
+
+.spinner > div {
+  width: 10px;
+  height: 10px;
+  background-color: #333;
+
+  border-radius: 100%;
+  display: inline-block;
+  -webkit-animation: sk-bouncedelay 1.4s infinite ease-in-out both;
+  animation: sk-bouncedelay 1.4s infinite ease-in-out both;
+}
+
+.spinner .bounce1 {
+  -webkit-animation-delay: -0.32s;
+  animation-delay: -0.32s;
+}
+
+.spinner .bounce2 {
+  -webkit-animation-delay: -0.16s;
+  animation-delay: -0.16s;
+}
+
+@-webkit-keyframes sk-bouncedelay {
+  0%, 80%, 100% { -webkit-transform: scale(0) }
+  40% { -webkit-transform: scale(1.0) }
+}
+
+@keyframes sk-bouncedelay {
+  0%, 80%, 100% { 
+    -webkit-transform: scale(0);
+    transform: scale(0);
+  } 40% { 
+    -webkit-transform: scale(1.0);
+    transform: scale(1.0);
+  }
 }
