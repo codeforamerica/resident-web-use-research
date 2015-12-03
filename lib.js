@@ -527,11 +527,11 @@ function choropleth_style_null()
     };
 }
 function create_overlay(mapId, className, initialContent) {
-  jQuery('#'+mapId).append('<div class="'+className+'"></div>');
+  jQuery('#'+mapId).append('<div class="'+className+'"><div class="text"></div><div class="spinner"> <div class="bounce1"></div> <div class="bounce2"></div> <div class="bounce3"></div> </div></div>');
   update_overlay(mapId, className, initialContent);
 }
 function update_overlay(mapId, className, content) {
-  var $el = jQuery('#'+mapId).find('div.'+className);
+  var $el = jQuery('#'+mapId).find('div.'+className+' .text');
   $el.html(content);
 }
 function remove_overlay(mapId, className) {
@@ -588,10 +588,10 @@ function buttonClassNameForColor(colorString) {
     return "button-"+colorString.toLowerCase().split("_")[0];
 }
 function surveyProgressEventHandler(e, message) {
-  var $el = jQuery('#survey-map').find('div.loading');
+  var $el = jQuery('#survey-map').find('div.loading .text');
   $el.html(message);
 }
 function recommendationProgressEventHandler(e, message) {
-  var $el = jQuery('#recommendation-map').find('div.loading');
+  var $el = jQuery('#recommendation-map').find('div.loading .text');
   $el.html(message);
 }
