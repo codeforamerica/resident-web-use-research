@@ -4,6 +4,53 @@ var RESPONSES = 'Survey responses',
     CR_API_BASE = 'http://api.censusreporter.org/1.0',
     CR_API_PAGE = 60;
 
+ResidentResearch = window.ResidentResearch || {};
+
+ResidentResearch.correlation = function() {
+
+  with_no_population = function(object_to_filter) {
+      return object_to_filter.population !== false;
+  }
+  exclude_not_intersecting_tracts = function(intersecting_populations) {
+    return _.filter(intersecting_populations, with_no_population);
+  }
+  population_for_response_in_tract = function(tract,response) {
+    return { population: tract.getFeatureIntersectionPopulation(response.feature), geoid: tract.geoid };
+  }
+  intersection_population = function(tracts, response) {
+    return exclude_not_intersecting_tracts(_.map(tracts, function(tract){
+      return population_for_response_in_tract(tract, response);
+    }));
+  }
+  total_intersection_population = function(intersection_population) {
+    return _.reduce(intersection_population, function(total, intersection_population){
+      return total + intersection_population.population;
+    },0);
+  }
+  intersection_population_for_geoid = function(intersecting_populations, geoid) {
+    return _.where(intersecting_populations, {geoid: geoid })
+  }
+  calculate_response_ratio = function(intersection_populations, population_estimate, current_ratio) {
+    return _.reduce(intersection_populations, function(total, intersection_population){
+      return total + (intersection_population.population / population_estimate);
+    },current_ratio);
+  }
+  sum_response_ratios = function(tract, intersection_populations,population_estimate) {
+    tract.responses = calculate_response_ratio(intersection_population_for_geoid(intersection_populations,tract.geoid), population_estimate, tract.responses);
+    console.log('Tract', tract.geoid, '-- est.', tract.responses.toFixed(3), 'responses');
+    return tract;
+  }
+  return {
+    accumulate_tracts: function (tracts, response) {
+      intersection_pops = intersection_population(tracts, response);
+      population_estimate = total_intersection_population(intersection_pops);
+      _.map(tracts, function(tract) {
+        sum_response_ratios(tract, intersection_pops,population_estimate);
+      });
+      console.log('Response', response.feature.properties.ZCTA5CE10, '-- est.', population_estimate.toFixed(0), 'people');
+    }
+  }
+}
 /**
  * Container class for census tract objects.
  *
@@ -17,6 +64,24 @@ function Tract(geoid, feature)
     this.feature = feature;
     this.responses = 0.0;
     this.data = null;
+    this.getFeatureIntersectionPopulation = function(feature) {
+      return this.getIntersectionPopulation(this.getIntersectionWithFeature(feature));
+    };
+    this.getIntersectionWithFeature = function(feature) {
+      return turf.intersect(this.feature, feature);
+    };
+    this.getIntersectionPopulation = function(intersection) {
+      return(intersection ? this._intersectionShare(intersection) * this.getEstimate() : false);
+    };
+    this.getEstimate = function() {
+      return this.getPopulation().estimate;
+    };
+    this.getPopulation = function() {
+      return this.data['B01003001'];
+    };
+    this._intersectionShare = function(intersection) {
+      return(turf.area(intersection) / turf.area(this.feature));
+    };
 }
 
 /**
@@ -152,115 +217,35 @@ function load_tract_data(original_tracts, onloaded_all_data)
 {
     var output_tracts = [],
         source_tracts = original_tracts.slice();
-    
+
     load_more_data();
-    
+
     function load_more_data()
     {
-        if(source_tracts.length == 0)
-        {
-            return onloaded_all_data(output_tracts);
-        }
-        
-        var request_tracts = [],
-            tables = 'B01003,B03002,B19013,B19301,B25003',
-            geoids = [];
-        
-        while(geoids.length < CR_API_PAGE && source_tracts.length)
-        {
-            var tract = source_tracts.shift();
-            request_tracts.push(tract);
-            geoids.push(tract.geoid);
-        }
-        
-        console.log(source_tracts.length, request_tracts.length, output_tracts.length);
 
-        jQuery.ajax(CR_API_BASE+'/data/show/acs2013_5yr?table_ids='+tables+'&geo_ids='+geoids.join(','),
-                    {success: function(response) { onloaded_data(request_tracts, response.data) }});
-    }
-    
-    function onloaded_data(request_tracts, data)
-    {
-        while(request_tracts.length)
+        var request_tracts = [];
+
+        while(request_tracts.length < CR_API_PAGE && source_tracts.length)
         {
-            var tract = request_tracts.shift(),
-                datum = data[tract.geoid],
-                sq_km = tract.feature.properties.aland / 1000000;
-            
-            tract.data = {
-                // total population
-                'B01003001': { estimate: datum['B01003'].estimate['B01003001'],
-                               error: datum['B01003'].error['B01003001'] },
-                // hispanic population
-                'B03002012': { estimate: datum['B03002'].estimate['B03002012'],
-                               error: datum['B03002'].error['B03002012'] },
-                // white population
-                'B03002003': { estimate: datum['B03002'].estimate['B03002003'],
-                               error: datum['B03002'].error['B03002003'] },
-                // black population
-                'B03002004': { estimate: datum['B03002'].estimate['B03002004'],
-                               error: datum['B03002'].error['B03002004'] },
-                // asian population
-                'B03002006': { estimate: datum['B03002'].estimate['B03002006'],
-                               error: datum['B03002'].error['B03002006'] },
-                // other race population
-                'B0300200x': { estimate: datum['B03002'].estimate['B03002005'] + datum['B03002'].estimate['B03002007'] + datum['B03002'].estimate['B03002008'] + datum['B03002'].estimate['B03002009'],
-                               error: undefined },
-                // median household income
-                'B19013001': { estimate: datum['B19013'].estimate['B19013001'],
-                               error: datum['B19013'].error['B19013001'] },
-                // per-capita income
-                'B19301001': { estimate: datum['B19301'].estimate['B19301001'],
-                               error: datum['B19301'].error['B19301001'] },
-                // total housing
-                'B25003001': { estimate: datum['B25003'].estimate['B25003001'],
-                               error: datum['B25003'].error['B25003001'] },
-                // owner-occupied housing
-                'B25003002': { estimate: datum['B25003'].estimate['B25003002'],
-                               error: datum['B25003'].error['B25003002'] },
-
-                // people per square km.
-                'population density':
-                    { estimate: datum['B01003'].estimate['B01003001'] / sq_km,
-                         error: datum['B01003'].error['B01003001'] / sq_km },
-                'hispanic density':
-                    { estimate: datum['B03002'].estimate['B03002012'] / sq_km,
-                         error: datum['B03002'].error['B03002012'] / sq_km },
-                'white density':
-                    { estimate: datum['B03002'].estimate['B03002003'] / sq_km,
-                         error: datum['B03002'].error['B03002003'] / sq_km },
-                'black density':
-                    { estimate: datum['B03002'].estimate['B03002004'] / sq_km,
-                         error: datum['B03002'].error['B03002004'] / sq_km },
-                'asian density':
-                    { estimate: datum['B03002'].estimate['B03002006'] / sq_km,
-                         error: datum['B03002'].error['B03002006'] / sq_km },
-
-                // percentages
-                'rental percentage':
-                    { estimate: 100 * (datum['B25003'].estimate['B25003001'] - datum['B25003'].estimate['B25003002']) / datum['B25003'].estimate['B25003001'],
-                         error: undefined },
-                'hispanic percentage':
-                    { estimate: 100 * datum['B03002'].estimate['B03002012'] / datum['B01003'].estimate['B01003001'],
-                         error: undefined },
-                'white percentage':
-                    { estimate: 100 * datum['B03002'].estimate['B03002003'] / datum['B01003'].estimate['B01003001'],
-                         error: undefined },
-                'black percentage':
-                    { estimate: 100 * datum['B03002'].estimate['B03002004'] / datum['B01003'].estimate['B01003001'],
-                         error: undefined },
-                'asian percentage':
-                    { estimate: 100 * datum['B03002'].estimate['B03002006'] / datum['B01003'].estimate['B01003001'],
-                         error: undefined }
-                };
-            
-            output_tracts.push(tract);
+            request_tracts.push(source_tracts.shift());
         }
-        
+        censusReporter = ResidentResearch.censusReporter(request_tracts);
+        censusReporter.getData(function(tracts)
+        {
+            output_tracts = output_tracts.concat(tracts);
+            console.log(source_tracts.length, request_tracts.length, output_tracts.length);
+            if(output_tracts.length == original_tracts.length)
+            {
+                return onloaded_all_data(output_tracts);
+            }
+        });
+
+      if(source_tracts.length > 0)
+      {
         load_more_data();
+      }
     }
 }
-
 /**
  * Correlate geographic overage of neighborhoods with Census tracts.
  *
@@ -273,66 +258,40 @@ function correlate_geographies(responses, tracts, oncorrelated)
 {
     console.log('Responses:', responses.length);
     console.log('One response:', responses[0]);
-    
+
     console.log('Tracts:', tracts.length);
     console.log('One tract:', tracts[0]);
-    
-    for(var i = 0; i < responses.length; i++)
-    {
-        var response = responses[i],
-            // Overall population estimated to lie within this response.
-            population_estimate = 0,
-            // Tract-by-tract shares of overall population.
-            intersection_pops = {};
-        
-        for(var j = 0; j < tracts.length; j++)
-        {
-            var tract = tracts[j],
-                intersection = turf.intersect(tract.feature, response.feature);
-            
-            if(intersection)
-            {
-                var tract_share = turf.area(intersection) / turf.area(tract.feature),
-                    intersection_pop = tract_share * tract.data['B01003001'].estimate;
-                
-                population_estimate += intersection_pop;
-                intersection_pops[tract.geoid] = intersection_pop;
-            
-                //console.log('Tract ' + tract.feature.properties.name + ' intersects area ' + response.feature.properties.ZCTA5CE10 + ' by ' + Math.round(share * 100) + '%');
-            }
-        }
-    
-        console.log('Response', response.feature.properties.ZCTA5CE10, '-- est.', population_estimate.toFixed(0), 'people');
-        
-        for(var j = 0; j < tracts.length; j++)
-        {
-            var tract = tracts[j],
-                share = intersection_pops[tract.geoid] / population_estimate;
-            
-            if(share)
-            {
-                tract.responses += share;
-            }
-        }
-        console.log('Response', response.feature.properties.ZCTA5CE10, '-- est.', population_estimate.toFixed(0), 'people');
-        jQuery( "body" ).trigger( "surveyMessage", ['Calculating reponse '+(i+1)+' of '+responses.length+'...'] );
-        
-    }
-    
-    var total = 0;
-    
-    for(var i = 0; i < tracts.length; i++)
-    {
-        console.log('Tract', tracts[i].geoid, '-- est.', tracts[i].responses.toFixed(3), 'responses');
-        jQuery( "body" ).trigger( "surveyMessage", ['Calculating tract '+(i+1)+' of '+tracts.length+'...'] );
-        total += tracts[i].responses;
-    }
-    
-    console.log('Total', total.toFixed(3));
-    
-    oncorrelated(tracts);
-}
+    //jQuery( "body" ).trigger( "surveyMessage", ['Calculating tract '+(i+1)+' of '+tracts.length+'...'] );
 
+    function work(item) {
+      correlate = ResidentResearch.correlation();
+      correlate.accumulate_tracts(tracts, item);
+    }
+    function finish(responses) {
+      oncorrelated(tracts);
+    }
+    timedChunk(responses, work, this, finish);
+}
+//Copyright 2009 Nicholas C. Zakas. All rights reserved.
+//MIT Licensed
+function timedChunk(items, process, context, callback){
+    var todo = items.concat();   //create a clone of the original
+
+    setTimeout(function(){
+
+        var start = +new Date();
+
+        do {
+             process.call(context, todo.shift());
+        } while (todo.length > 0 && (+new Date() - start < 50));
+
+        if (todo.length > 0){
+            setTimeout(arguments.callee, 25);
+        } else {
+            callback(items);
+        }
+    }, 25);
+}
 /**
  * Calculate coefficient of determination for tract responses, return R-squared.
  *
@@ -491,10 +450,10 @@ var DemographicsControl = L.Control.extend({
     
     options: {position: 'topright'},
     
-    initialize: function(datalayer, tracts, options)
+    initialize: function(map, tracts, options)
     {
         this.tracts = tracts;
-        this.datalayer = datalayer;
+        this.map = map;
         L.Util.setOptions(this, options);
     },
     
@@ -536,14 +495,18 @@ var DemographicsControl = L.Control.extend({
     
         for(var i = 0; i < this.tracts.length; i++)
         {
-            geojson.features.push(this.tracts[i].feature);
+            var tract = stuff.tracts[i];
+            var feature = tract.feature;
+            feature.properties.data = tract.data;
+            feature.properties.responses = tract.responses;
+            geojson.features.push(feature);
         }
     
         var style_function = get_style_function(this.tracts, layer_name, colors);
     
-        this.datalayer.clearLayers();
-        this.datalayer.addData(geojson);
-        this.datalayer.setStyle(style_function);
+        this.map.setData(geojson);
+        this.map.setStyle(style_function);
+        this.map.reloadStyle();
     }
     
 });
@@ -574,6 +537,19 @@ function update_overlay(mapId, className, content) {
 function remove_overlay(mapId, className) {
   jQuery('#'+mapId).find('div.'+className).remove();
 }
+function tooltipTemplate() {
+
+    return '<h3>{tractName}</h3><b>Population:</b> {population}<br/>Details: <a target="_blank" href="http://censusreporter.org/profiles/{geoid}">{geoid}</a>';
+}
+function detailTooltipTemplate() {
+      return '<b>Responses:</b> {responses}<br/>'+
+      '<b>White Population:</b> {white} %<br/>'+
+      '<b>Black Population:</b> {black} %<br/>'+
+      '<b>Hispanic Population:</b> {hispanic} %<br/>'+
+      '<b>Asian Population:</b> {asian} %<br/>'+
+      '<b>Rental percentage:</b> {rental} %<br/>'+
+      '<b>Per capita income:</b> ${income}<br/>';
+}
 /**
  * Build TileLayer String for Stamen layers
  *
@@ -582,70 +558,31 @@ function remove_overlay(mapId, className) {
 function stamenLayer(stamenType, retina) {
   return 'http://{s}.tile.stamen.com/'+stamenType+'/{z}/{x}/{y}'+(retina ? '@2x': '')+'.png';
 }
-/**
- * Build a map with GeoJSON data.
- *
- * Return reference to GeoJSON data layer.
- */
-function build_map(element_id, geojson)
-{
-    var envelope, feature;
-    
-    for(var i = 0; i < geojson.features.length; i++)
-    {
-        feature = geojson.features[i];
-        
-        if(envelope == undefined) {
-            envelope = turf.envelope(feature);
 
-        } else {
-            envelope = turf.envelope(turf.union(envelope, feature));
-        }
-    }
-    
-    var extent = turf.extent(turf.buffer(envelope, 2, 'kilometers')),
-        xmin = extent[0], ymin = extent[1],
-        xmax = extent[2], ymax = extent[3],
-        center = new L.LatLng(ymax/2 + ymin/2, xmax/2 + xmin/2),
-        northeast = new L.LatLng(ymax, xmax),
-        southwest = new L.LatLng(ymin, xmin),
-        maxBounds = new L.latLngBounds(northeast, southwest),
-        options = {
-            center: center, zoom: 12,
-            maxBounds: maxBounds, minZoom: 9, maxZoom: 16,
-            scrollWheelZoom: false, attributionControl: false
-            };
-    
-    var map = new L.Map(element_id, options),
-        tileLayerBg = new L.TileLayer(stamenLayer('toner-background', L.Browser.retina));
-        tileLayerLabels = new L.TileLayer(stamenLayer('toner-labels', L.Browser.retina));
-
-    map.addLayer(tileLayerBg);
-    map.addLayer(tileLayerLabels);
-    
-    
-    var attr = L.control.attribution({prefix: '', position: 'bottomright'});
-    attr.addAttribution('Demographic data via <a target="_blank" href="http://censusreporter.org">Census Reporter</a>');
-    attr.addAttribution('<a target="_blank" href="http://maps.stamen.com">Cartography</a> by <a target="_blank" href="http://stamen.com">Stamen</a>');
-    attr.addAttribution('Map Data <a target="_blank" href="http://www.openstreetmap.org/copyright">&copy; OSM contributors</a>');
-    map.addControl(attr);
-    
-    function onEachFeature(feature, layer)
-    {
-        layer.bindPopup('<a target="_blank" href="http://censusreporter.org/profiles/'+feature.properties.geoid+'">'+feature.properties.geoid+'</a>');
-    }
-    
-    var datalayer = L.geoJson(geojson, {style: choropleth_style_null, onEachFeature: onEachFeature}).addTo(map);
-    var topPane = map._createPane('leaflet-top-pane', map.getPanes().mapPane);
-    topPane.appendChild(tileLayerLabels.getContainer());
-    tileLayerLabels.setZIndex(9);
-    
-    return {data: datalayer, map: map};
+function human_float(number) {
+  if(number === 0) {
+    return '';
+  }
+  if(number % 1 < 0.5) {
+    return 'less than';
+  }
+  return 'more than';
 }
-
 function update_status(message)
 {
     document.getElementById('status').innerHTML = message;
+}
+var roundNumber = function(value, decimals) {
+    var precision = (!!decimals) ? decimals : 0,
+        factor = Math.pow(10, precision),
+        value = Math.round(value * factor) / factor;
+
+    return value;
+}
+var numberWithCommas = function(n) {
+    var parts = roundNumber(n).toString().split(".");
+
+    return parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",") + (parts[1] ? "." + parts[1] : "");
 }
 function buttonClassNameForColor(colorString) {
     return "button-"+colorString.toLowerCase().split("_")[0];
