@@ -261,7 +261,6 @@ function correlate_geographies(responses, tracts, oncorrelated)
 
     console.log('Tracts:', tracts.length);
     console.log('One tract:', tracts[0]);
-    //jQuery( "body" ).trigger( "surveyMessage", ['Calculating tract '+(i+1)+' of '+tracts.length+'...'] );
 
     function work(item) {
       correlate = ResidentResearch.correlation();
@@ -270,11 +269,14 @@ function correlate_geographies(responses, tracts, oncorrelated)
     function finish(responses) {
       oncorrelated(tracts);
     }
-    timedChunk(responses, work, this, finish);
+    function chunkFinished(items) {
+      jQuery( "body" ).trigger( "surveyMessage", ['Calculating tract '+(responses.length - items.length + 1)+' of '+responses.length+'...'] );
+    }
+    timedChunk(responses, work, this, finish, chunkFinished);
 }
 //Copyright 2009 Nicholas C. Zakas. All rights reserved.
 //MIT Licensed
-function timedChunk(items, process, context, callback){
+function timedChunk(items, process, context, callback, chunkCallback){
     var todo = items.concat();   //create a clone of the original
 
     setTimeout(function(){
@@ -286,6 +288,7 @@ function timedChunk(items, process, context, callback){
         } while (todo.length > 0 && (+new Date() - start < 50));
 
         if (todo.length > 0){
+            chunkCallback(todo);
             setTimeout(arguments.callee, 25);
         } else {
             callback(items);
