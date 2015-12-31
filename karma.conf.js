@@ -1,19 +1,23 @@
 module.exports = function(config) {
   config.set({
-
     basePath: '',
     frameworks: ['mocha', 'chai', 'sinon-chai', 'fixture'],
     files: [
       'node_modules/leaflet/dist/leaflet.js',
+      'node_modules/underscore/underscore.js',
+      'node_modules/jquery/dist/jquery.js',
       '*.js',
-      'test/**/*Spec.js'
+      'test/**/*Spec.js',
+      { pattern: 'test/mocks/**/*' }
     ],
     exclude: [
       '**/*.swp'
     ],
     preprocessors: {
       '**/*.json'   : ['html2js'],
-      'lib.js': 'coverage'
+      'lib.js': 'coverage',
+      'census-reporter.js': 'coverage',
+      'map.js': 'coverage'
     },
     reporters: ['progress','coverage'],
     coverageReporter: {

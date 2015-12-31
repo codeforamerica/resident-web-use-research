@@ -7,7 +7,9 @@
     "test": "test"
   },
   "dependencies": {
-    "leaflet": ""
+    "leaflet": "^0.7.7",
+    "jquery":"^2.1.4",
+    "underscore":"^1.8.3"
   },
   "devDependencies": {
     "chai": "^2.2.0",
@@ -17,7 +19,7 @@
     "karma-chrome-launcher": "^0.1.7",
     "karma-coverage": "^0.2.7",
     "karma-expect": "^1.1.0",
-    "karma-fixture": "^0.2.3",
+    "karma-fixture": "0.2.3",
     "karma-html2js-preprocessor": "^0.1.0",
     "karma-mocha": "^0.1.10",
     "karma-phantomjs-launcher": "^0.1.4",

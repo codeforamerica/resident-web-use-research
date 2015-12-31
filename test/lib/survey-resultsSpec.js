@@ -3,10 +3,12 @@ describe('surveyResults', function() {
     this.sandbox = sinon.sandbox.create();
     this.server = sinon.fakeServer.create();
     this.subject = ResidentResearch.surveyResults();
+    this.clock = sinon.useFakeTimers();
   });
   afterEach(function() {
     this.sandbox.restore();
     this.server.restore();
+    this.clock.restore();
   });
 
   describe('#init', function() {
@@ -23,7 +25,7 @@ describe('surveyResults', function() {
       window.load_spreadsheet = this.load_spreadsheet;
       var data = { clearLayers: function() {}, addData: function(d) {}, setStyle: function(s) {}};
       var map = { addControl: function(c) {}};
-      this.build_map = { data: data, map: map };
+      this.build_map = { init: function(e,d) {}, data: data, map: map };
     });
     it('calls load_city_tracts', function() {
       mock = this.sandbox.mock(window);
@@ -33,14 +35,14 @@ describe('surveyResults', function() {
     });
 
     it('builds the maps', function() {
-      mock = this.sandbox.mock(window);
-      mock.expects("build_map").twice().returns(this.build_map);
+      mock = this.sandbox.mock(ResidentResearch);
+      mock.expects("map").twice().returns(this.build_map);
       this.subject.init();
       mock.verify();
     });
     context("after building the map", function() {
       beforeEach(function() {
-        this.sandbox.stub(window, "build_map").returns(this.build_map);
+        this.sandbox.stub(ResidentResearch, "map").returns(this.build_map);
       });
       it('loads_tract_data', function() {
         mock = this.sandbox.mock(window);
@@ -58,6 +60,7 @@ describe('surveyResults', function() {
         mock = this.sandbox.mock(window);
         mock.expects("correlate_geographies").once();
         this.subject.init();
+        this.clock.tick(1);
         mock.verify();
       });
     })

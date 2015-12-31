@@ -100,7 +100,7 @@ ResidentResearch.surveyResults = function() {
     update_access_text(access);
 
     update_status('Found ' + tracts.length + ' tracts in ' + city.name + ' and <a target="_blank" href="' + spreadsheet_url + '">a spreadsheet with ' + geo_responses.length + ' geographic responses</a>.');
-    correlate_geographies(geo_responses, tracts, correlated_spreadsheet);
+    _.defer(correlate_geographies,geo_responses, tracts, correlated_spreadsheet);
 
   };
 
@@ -131,17 +131,21 @@ ResidentResearch.surveyResults = function() {
 
     var style_function = get_style_function(tracts, RESPONSES, GREENS);
 
-    maps.survey.data.clearLayers();
-    maps.survey.data.addData(geojson);
-    maps.survey.data.setStyle(style_function);
+    maps.survey.setData(geojson);
+    maps.survey.setStyle(style_function);
+    maps.survey.reloadStyle();
+    maps.recommendation.setData(geojson);
+    maps.recommendation.reloadStyle();
   };
 
   var loaded_tracts = function(cityGeoid, cityName, tracts) {
     city.name = cityName;
     city.geoid = cityGeoid;
     var geojson = create_geojson_features(tracts, 'GeometryCollection');
-    maps.survey = build_map('survey-map', geojson);
-    maps.recommendation = build_map('recommendation-map', geojson);
+    maps.survey = ResidentResearch.map();
+    maps.survey.init('survey-map', geojson);
+    maps.recommendation = ResidentResearch.map();
+    maps.recommendation.init('recommendation-map', geojson);
     update_status('Found ' + tracts.length + ' tracts. Loading data…');
     load_tract_data(tracts, loaded_tract_data);
   };
