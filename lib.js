@@ -556,6 +556,20 @@ function human_float(number) {
   }
   return 'more than';
 }
+
+function update_text(id, text) {
+  document.getElementById(id).innerText = text;
+};
+
+function create_list(list, elementId, text_function) {
+    for(var i = 0; i < list.length; i++)
+    {
+        var li = document.createElement('li');
+        li.innerText = text_function(list[i]);
+        document.getElementById(elementId).appendChild(li);
+    }
+}
+
 function update_status(message)
 {
     document.getElementById('status').innerHTML = message;
