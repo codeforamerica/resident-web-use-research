@@ -10,7 +10,7 @@ ResidentResearch.censusReporter = function(tracts) {
   };
 
   var apiUrlForTableAndGeoids = function(table, geoids) {
-    return CR_API_BASE+'/data/show/acs2013_5yr?table_ids='+table+'&geo_ids='+geoids.join(',');
+    return CR_API_BASE+'/data/show/latest?table_ids='+table+'&geo_ids='+geoids.join(',');
   };
 
   var populationResult = function(d, sq_km) {

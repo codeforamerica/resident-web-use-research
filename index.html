@@ -14,7 +14,7 @@
 	<li><a href="http://api.censusreporter.org/1.0/geo/tiger2013/16000US0653000">JSON for single feature</a></li>
 	<li><a href="http://api.censusreporter.org/1.0/geo/tiger2013/tiles/140/12/656/1582.geojson">Tile of tracts</a></li>
 	<li><a href="http://api.censusreporter.org/1.0/geo/show/tiger2013?geo_ids=14000US06001401000,14000US06001401400">Pair of selected features</a></li>
-	<li><a href="http://api.censusreporter.org/1.0/data/show/acs2013_5yr?table_ids=B13016&amp;geo_ids=04000US55">Data for one feature</a></li>
+	<li><a href="http://api.censusreporter.org/1.0/data/show/latest?table_ids=B13016&amp;geo_ids=04000US55">Data for one feature</a></li>
 </ul>
 
 <script>
@@ -29,7 +29,7 @@
     }
     
     var q = 'Portland',
-        url = api_base_href+'/geo/elasticsearch?size=1&sumlevs=160&q='+escape(q),
+        url = api_base_href+'/geo/search?size=1&sumlevs=160&q='+escape(q),
         result = jQuery.ajax(url, {async: false, beforeSend: announce}),
         muni_geoid = result.responseJSON.results[0].full_geoid,
         display_name = result.responseJSON.results[0].display_name;
@@ -95,7 +95,7 @@
             chunk_tracts[tract.properties.geoid] = tract;
         }
     
-        var url = api_base_href+'/data/show/acs2013_5yr?table_ids=B01003,B03002,B19013,B19301,B25003&geo_ids='+geoids.join(','),
+        var url = api_base_href+'/data/show/latest?table_ids=B01003,B03002,B19013,B19301,B25003&geo_ids='+geoids.join(','),
             result = jQuery.ajax(url, {async: false, beforeSend: announce}),
             tables = result.responseJSON.tables,
             data = result.responseJSON.data;

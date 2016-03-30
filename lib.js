@@ -176,7 +176,7 @@ function load_city_tracts(city_name, onloaded_tracts)
 {
     var info = {muni_geoid: null, display_name: null};
     
-    jQuery.ajax(CR_API_BASE+'/geo/elasticsearch?size=1&sumlevs=160&q='+escape(city_name),
+    jQuery.ajax(CR_API_BASE+'/geo/search?size=1&sumlevs=160&q='+escape(city_name),
                 {success: onloaded_place});
     
     function onloaded_place(json)
