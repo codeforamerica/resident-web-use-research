@@ -1,4 +1,4 @@
-ResidentResearch = window.ResidentResearch || {}
+ResidentResearch = window.ResidentResearch || {};
 
 ResidentResearch.surveyResults = function() {
   var spreadsheet_url= null,
@@ -9,8 +9,8 @@ ResidentResearch.surveyResults = function() {
     survey: {data: null, map: null}
   };
 
-  var addRecommendationControls = function() {
-    var buttons = new DemographicsControl(maps.recommendation.data, tracts);
+  var addRecommendationControls = function(map) {
+    var buttons = new DemographicsControl(maps.recommendation.map, tracts);
     maps.recommendation.map.addControl(buttons);
   };
 
@@ -106,7 +106,7 @@ ResidentResearch.surveyResults = function() {
     var message = ('Found ' + tracts.length + ' tracts in ' + city.name + ' and <a target="_blank" href="' + spreadsheet_url + '">a spreadsheet with ' + geo_responses.length + ' geographic responses</a>.');
     update_status(message);
     jQuery( "body" ).trigger( "surveyMessage", [message] );
-    _.defer(correlate_geographies,geo_responses, tracts, correlated_spreadsheet);
+    _.defer(correlate_geographies, geo_responses, tracts, correlated_spreadsheet);
 
   };
 
@@ -126,11 +126,11 @@ ResidentResearch.surveyResults = function() {
     var text_function = function(d) {
       return d[0] + ': ' + d[1].toFixed(3);
     }
-    update_overlay('survey-map', 'loading', 'Calculating reponse '+(i+1)+' of '+regressions.length+'...');
-    create_list(regressions, 'regressions',text_function);
+    update_overlay('survey-map', 'loading', 'Calculating regressions...');
+    create_list(regressions, 'regressions', text_function);
 
     update_status('Found ' + tracts.length + ' tracts in ' + city.name + ' and <a target="_blank" href="'+spreadsheet_url+'">a spreadsheet with ' + responses.length + ' responses</a>.');
-    update_overlay('survey-map', 'loading', 'Update the map');
+    update_overlay('survey-map', 'loading', 'Updating the map...');
     render_survey_map();
   };
 
@@ -139,11 +139,11 @@ ResidentResearch.surveyResults = function() {
 
     var style_function = get_style_function(tracts, RESPONSES, GREENS);
 
-    maps.survey.setData(geojson);
-    maps.survey.setStyle(style_function);
-    maps.survey.reloadStyle();
-    maps.recommendation.setData(geojson);
-    maps.recommendation.reloadStyle();
+    maps.survey.map.setData(geojson);
+    maps.survey.map.setStyle(style_function);
+    maps.survey.map.reloadStyle();
+    maps.recommendation.map.setData(geojson);
+    maps.recommendation.map.reloadStyle();
 
     remove_overlay('survey-map', 'loading');
   };
@@ -152,10 +152,10 @@ ResidentResearch.surveyResults = function() {
     city.name = cityName;
     city.geoid = cityGeoid;
     var geojson = create_geojson_features(tracts, 'GeometryCollection');
-    maps.survey = ResidentResearch.map();
-    maps.survey.init('survey-map', geojson);
-    maps.recommendation = ResidentResearch.map();
-    maps.recommendation.init('recommendation-map', geojson);
+    maps.survey.map = ResidentResearch.map();
+    maps.survey.map.init('survey-map', geojson);
+    maps.recommendation.map = ResidentResearch.map();
+    maps.recommendation.map.init('recommendation-map', geojson);
 
     create_overlay('survey-map', 'loading', '<h1>Loading city tracts...</h1>');
     create_overlay('recommendation-map', 'loading', '<h1>Loading city tracts...</h1>');
