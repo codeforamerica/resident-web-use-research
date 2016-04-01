@@ -184,7 +184,7 @@ function load_city_tracts(city_name, onloaded_tracts)
         info.muni_geoid = json.results[0].full_geoid;
         info.display_name = json.results[0].display_name;
 
-        jQuery.ajax(CR_API_BASE+'/geo/show/tiger2013?geo_ids=140|'+escape(info.muni_geoid),
+        jQuery.ajax(CR_API_BASE+'/geo/show/tiger2014?geo_ids=140|'+escape(info.muni_geoid),
                     {success: onloaded_geojson});
     }
 
