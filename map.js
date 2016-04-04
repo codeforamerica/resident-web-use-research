@@ -86,7 +86,6 @@ ResidentResearch.map = function() {
     dataLayer = L.geoJson(geojson, {style: choropleth_style_null, onEachFeature: onEachFeature}).addTo(map);
     setEventListener();
     layerOrderingHack(tileLayerLabels);
-    return this;
   };
   var attributions = function() {
     var attr = L.control.attribution({prefix: '', position: 'bottomright'});

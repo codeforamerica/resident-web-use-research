@@ -31,7 +31,7 @@ describe('censusReporter', function() {
   describe('#getData', function() {
     context('server responds correctly', function() {
       beforeEach(function() {
-        this.server.respondWith("GET", /.*\/data\/show\/acs2013_5yr\?table_ids=.*&geo_ids=.*/, this.serverResponse)
+        this.server.respondWith("GET", /.*\/data\/show\/latest\?table_ids=.*&geo_ids=.*/, this.serverResponse)
       });
       it('calls the pormise', function() {
         cb = this.sandbox.spy();
@@ -73,7 +73,7 @@ describe('censusReporter', function() {
     context('server returns error', function() {
       beforeEach(function() {
       serverResponse = [400, { "Content-Type": "application/json" }, '']
-        this.server.respondWith("GET", /.*\/data\/show\/acs2013_5yr\?table_ids=.*&geo_ids=.*/, serverResponse)
+        this.server.respondWith("GET", /.*\/data\/show\/latest\?table_ids=.*&geo_ids=.*/, serverResponse)
       });
       it('does not call the pormise', function() {
         cb = this.sandbox.spy();

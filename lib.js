@@ -176,7 +176,7 @@ function load_city_tracts(city_name, onloaded_tracts)
 {
     var info = {muni_geoid: null, display_name: null};
     
-    jQuery.ajax(CR_API_BASE+'/geo/elasticsearch?size=1&sumlevs=160&q='+escape(city_name),
+    jQuery.ajax(CR_API_BASE+'/geo/search?size=1&sumlevs=160&q='+escape(city_name.replace(/,/g,' ')),
                 {success: onloaded_place});
     
     function onloaded_place(json)
@@ -184,7 +184,7 @@ function load_city_tracts(city_name, onloaded_tracts)
         info.muni_geoid = json.results[0].full_geoid;
         info.display_name = json.results[0].display_name;
 
-        jQuery.ajax(CR_API_BASE+'/geo/show/tiger2013?geo_ids=140|'+escape(info.muni_geoid),
+        jQuery.ajax(CR_API_BASE+'/geo/show/tiger2014?geo_ids=140|'+escape(info.muni_geoid),
                     {success: onloaded_geojson});
     }
 
@@ -498,7 +498,7 @@ var DemographicsControl = L.Control.extend({
     
         for(var i = 0; i < this.tracts.length; i++)
         {
-            var tract = stuff.tracts[i];
+            var tract = this.tracts[i];
             var feature = tract.feature;
             feature.properties.data = tract.data;
             feature.properties.responses = tract.responses;
