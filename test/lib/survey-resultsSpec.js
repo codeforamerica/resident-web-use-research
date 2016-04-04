@@ -23,9 +23,7 @@ describe('surveyResults', function() {
       window.load_tract_data = this.load_tract_data;
       this.load_spreadsheet = function(q, s, cb, e) { cb([], '')};
       window.load_spreadsheet = this.load_spreadsheet;
-      var data = { clearLayers: function() {}, addData: function(d) {}, setStyle: function(s) {}};
-      var map = { addControl: function(c) {}};
-      this.build_map = { init: function(e,d) {}, data: data, map: map };
+      this.build_map = { init: function(e,d) {}, addControl: function(c) {}};
     });
     it('calls load_city_tracts', function() {
       mock = this.sandbox.mock(window);
